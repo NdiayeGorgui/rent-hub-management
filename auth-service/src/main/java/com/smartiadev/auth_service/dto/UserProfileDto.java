@@ -1,0 +1,34 @@
+package com.smartiadev.auth_service.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.util.List;
+import java.util.UUID;
+
+@Data
+@Builder
+public class UserProfileDto {
+
+    // IDENTITÉ
+    private UUID userId;
+    private String username;
+    private String fullName;
+
+    // LOCALISATION
+    private String city;
+
+    // RÉPUTATION
+    private Double averageRating;
+    private Long reviewsCount;
+    private String badge;
+
+    // HISTORIQUE
+    private List<ItemSummaryDto> publishedItems;
+    private List<ItemSummaryDto> rentedItems;
+
+    // PRIVÉ (plus tard)
+    // private String email;
+    // private String phone;
+}
+
