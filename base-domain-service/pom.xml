@@ -24,6 +24,7 @@
 	</properties>
 
 	<dependencies>
+
 		<!-- Lombok pour simplifier les DTO -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
