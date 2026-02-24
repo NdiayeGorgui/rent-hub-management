@@ -1,6 +1,5 @@
 package com.smartiadev.rental_service.entity;
 
-import com.smartiadev.rental_service.dto.RentalStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

@@ -27,23 +27,13 @@
         <module name="auth-service" />
         <module name="configuration-service" />
         <module name="review-service" />
-        <module name="api-gateway" />
         <module name="item-service" />
         <module name="notif-service" />
         <module name="dispute-service" />
         <module name="eureka-registry" />
         <module name="rental-service" />
-        <module name="payments-service" />
-      </profile>
-      <profile name="Annotation profile for subscription-service" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
-        </processorPath>
-        <module name="subscription-service" />
         <module name="auction-service" />
+        <module name="payments-service" />
       </profile>
     </annotationProcessing>
   </component>

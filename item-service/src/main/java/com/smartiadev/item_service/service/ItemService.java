@@ -1,7 +1,6 @@
 package com.smartiadev.item_service.service;
 
 import com.smartiadev.item_service.dto.*;
-import com.smartiadev.item_service.entity.Item;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,7 +14,7 @@ public interface ItemService {
 
     List<ItemResponseDTO> findAllActive();
 
-    ItemResponseDTO findById(Long id);
+    ItemResponseDTO findById(Long id) ;
 
     List<ItemResponseDTO> findByOwner(UUID ownerId);
 

@@ -1,7 +1,7 @@
 package com.smartiadev.rental_service.scheduler;
 
 import com.smartiadev.base_domain_service.dto.RentalStartedEvent;
-import com.smartiadev.rental_service.dto.RentalStatus;
+import com.smartiadev.rental_service.entity.RentalStatus;
 import com.smartiadev.rental_service.entity.Rental;
 import com.smartiadev.rental_service.kafka.RentalEventProducer;
 import com.smartiadev.rental_service.repository.RentalRepository;

@@ -19,6 +19,7 @@
 
     <modules>
         <module>api-gateway</module>
+        <module>auction-service</module>
         <module>auth-service</module>
         <module>base-domain-service</module>
         <module>configuration-service</module>
@@ -29,6 +30,7 @@
         <module>payments-service</module>
         <module>rental-service</module>
         <module>review-service</module>
+        <module>subscription-service</module>
     </modules>
 
     <properties>
