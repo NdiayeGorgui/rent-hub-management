@@ -1,10 +1,7 @@
 package com.smartiadev.rental_service.kafka;
 
 
-import com.smartiadev.base_domain_service.dto.RentalApprovedEvent;
-import com.smartiadev.base_domain_service.dto.RentalCancelledEvent;
-import com.smartiadev.base_domain_service.dto.RentalEndedEvent;
-import com.smartiadev.base_domain_service.dto.RentalStartedEvent;
+import com.smartiadev.base_domain_service.dto.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -26,6 +23,10 @@ public class RentalEventProducer {
 
     public void sendRentalCancelled(RentalCancelledEvent event) {
         kafkaTemplate.send("rental.cancelled", event);
+    }
+
+    public void sendRentalCancelledByUser(RentalCancelledByUserEvent event) {
+        kafkaTemplate.send("rental.cancelled.by.user", event);
     }
 
     public void sendRentalEnded(RentalEndedEvent event) {

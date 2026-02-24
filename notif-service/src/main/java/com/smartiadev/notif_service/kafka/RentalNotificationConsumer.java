@@ -1,9 +1,6 @@
 package com.smartiadev.notif_service.kafka;
 
-import com.smartiadev.base_domain_service.dto.RentalApprovedEvent;
-import com.smartiadev.base_domain_service.dto.RentalCancelledEvent;
-import com.smartiadev.base_domain_service.dto.RentalEndedEvent;
-import com.smartiadev.base_domain_service.dto.RentalStartedEvent;
+import com.smartiadev.base_domain_service.dto.*;
 import com.smartiadev.notif_service.entity.Notification;
 import com.smartiadev.notif_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +56,20 @@ public class RentalNotificationConsumer {
         ));
         System.out.println(
                 "❌ Désolé, le produit est déjà loué"
+        );
+    }
+    @KafkaListener(topics = "rental.cancelled.by.user")
+    public void cancelledByUser(RentalCancelledByUserEvent event) {
+        repository.save(new Notification(
+                null,
+                event.renterId(),
+                "Votre location a ete annulée🚀",
+                "CANCELLED",
+                false,
+                LocalDateTime.now()
+        ));
+        System.out.println(
+                "🚀 Votre location a ete annulée"
         );
     }
 

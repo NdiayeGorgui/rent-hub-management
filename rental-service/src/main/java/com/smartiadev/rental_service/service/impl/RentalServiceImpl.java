@@ -1,11 +1,13 @@
 package com.smartiadev.rental_service.service.impl;
 
 import com.smartiadev.base_domain_service.dto.RentalApprovedEvent;
+import com.smartiadev.base_domain_service.dto.RentalCancelledByUserEvent;
 import com.smartiadev.base_domain_service.dto.RentalCancelledEvent;
 import com.smartiadev.rental_service.client.ItemClient;
 import com.smartiadev.rental_service.client.ReviewClient;
 import com.smartiadev.rental_service.dto.*;
 import com.smartiadev.rental_service.entity.Rental;
+import com.smartiadev.rental_service.entity.RentalStatus;
 import com.smartiadev.rental_service.kafka.RentalEventProducer;
 import com.smartiadev.rental_service.repository.RentalRepository;
 import com.smartiadev.rental_service.service.RentalService;
@@ -20,7 +22,6 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -100,13 +101,31 @@ public class RentalServiceImpl implements RentalService {
         Rental rental = repository.findById(rentalId)
                 .orElseThrow();
 
+        // Vérification de la légitimité
         if (!rental.getRenterId().equals(userId)
                 && !rental.getOwnerId().equals(userId)) {
             throw new RuntimeException("Forbidden");
         }
-
+        // ✅ Annuler la location
         rental.setStatus(RentalStatus.CANCELLED);
         repository.save(rental);
+        // 🔄 Notifier item-service pour réactiver l'item
+      /*  try {
+            itemClient.setItemActive(rental.getItemId(), true);
+        } catch (Exception e) {
+            // ⚠️ Log erreur mais ne bloque pas l'annulation
+            System.err.println("Failed to reactivate item " + rental.getItemId() + ": " + e.getMessage());
+        }*/
+
+        // 📣 Event Kafka
+        eventProducer.sendRentalCancelledByUser(
+                new RentalCancelledByUserEvent(
+                        rental.getId(),
+                        rental.getItemId(),
+                        rental.getRenterId(),
+                        RentalStatus.CANCELLED.name()
+                )
+        );
     }
 
     private RentalResponseDTO map(Rental r) {

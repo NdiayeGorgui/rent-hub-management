@@ -3,6 +3,7 @@ package com.smartiadev.review_service.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -17,6 +18,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
@@ -61,5 +63,24 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
         return converter;
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+
+        org.springframework.web.cors.CorsConfiguration configuration =
+                new org.springframework.web.cors.CorsConfiguration();
+
+        configuration.setAllowedOrigins(java.util.List.of("*"));
+        configuration.setAllowedMethods(java.util.List.of("*"));
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowCredentials(false);
+
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
+                new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
     }
 }

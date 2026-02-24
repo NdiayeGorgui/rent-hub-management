@@ -1,6 +1,6 @@
 package com.smartiadev.rental_service.repository;
 
-import com.smartiadev.rental_service.dto.RentalStatus;
+import com.smartiadev.rental_service.entity.RentalStatus;
 import com.smartiadev.rental_service.entity.Rental;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Page;

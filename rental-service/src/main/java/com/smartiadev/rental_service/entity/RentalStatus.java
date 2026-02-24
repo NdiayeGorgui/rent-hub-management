@@ -1,4 +1,4 @@
-package com.smartiadev.rental_service.dto;
+package com.smartiadev.rental_service.entity;
 
 public enum RentalStatus {
     CREATED,
