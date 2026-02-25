@@ -3,6 +3,7 @@ package com.smartiadev.auth_service.service;
 import com.smartiadev.auth_service.client.ItemClient;
 import com.smartiadev.auth_service.client.RentalClient;
 import com.smartiadev.auth_service.client.ReviewClient;
+import com.smartiadev.auth_service.client.SubscriptionClient;
 import com.smartiadev.auth_service.dto.ItemSummaryDto;
 import com.smartiadev.auth_service.dto.UserProfileDto;
 import com.smartiadev.auth_service.entity.User;
@@ -23,6 +24,7 @@ public class ProfileService {
     private final ReviewClient reviewClient;
     private final ItemClient itemClient;
     private final RentalClient rentalClient;
+    private final SubscriptionClient subscriptionClient;
 
     /**
      * 👤 PROFIL PUBLIC
@@ -54,11 +56,16 @@ public class ProfileService {
         List<ItemSummaryDto> rentedItems =
                 rentalClient.getRentalHistory(userId);
 
+        boolean isPremium =
+                subscriptionClient.isPremium(userId);
+
+
         return UserProfileDto.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .city(user.getCity())
+                .premium(isPremium)
                 .averageRating(safeRating)
                 .reviewsCount(safeCount)
                 .badge(badge)

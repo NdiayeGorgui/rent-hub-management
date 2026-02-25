@@ -49,7 +49,9 @@ public class SecurityConfig {
                                 "/review-service/v3/api-docs",
                                 "/payments-service/v3/api-docs",
                                 "/dispute-service/v3/api-docs",
-                                "/notif-service/v3/api-docs"
+                                "/notif-service/v3/api-docs",
+                                "/subscription-service/v3/api-docs",
+                                "/auction-service/v3/api-docs"
                         ).permitAll()
 
                         // =========================
@@ -74,7 +76,9 @@ public class SecurityConfig {
                                 "/api/reviews/**",
                                 "/api/notifications/**",
                                 "/api/disputes/**",
-                                "/api/payments/**"
+                                "/api/payments/**",
+                                "/api/subscriptions/**",
+                                "/api/auctions/**"
                         ).authenticated()
 
                         .anyExchange().authenticated()
