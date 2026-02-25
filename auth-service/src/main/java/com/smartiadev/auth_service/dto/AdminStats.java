@@ -20,6 +20,15 @@ public record AdminStats(
         Double averagePlatformRating,
 
         // ⚖️ DISPUTES
-        DisputeStats disputeStats
+        DisputeStats disputeStats,
+
+        // ⚖️ AUCTIONS
+        AuctionStats auctionStats,
+
+        // ⚖️ SUBSCRIPTIONS
+        SubscriptionStats subscriptionStats,
+
+        // ⚖️ PAYMENTS
+        PaymentStats paymentStats
 
 ) {}
