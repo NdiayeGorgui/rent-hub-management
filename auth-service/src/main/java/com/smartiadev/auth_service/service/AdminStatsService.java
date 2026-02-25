@@ -1,11 +1,7 @@
 package com.smartiadev.auth_service.service;
 
-import com.smartiadev.auth_service.client.DisputeClient;
-import com.smartiadev.auth_service.client.ItemClient;
-import com.smartiadev.auth_service.client.RentalClient;
-import com.smartiadev.auth_service.client.ReviewClient;
-import com.smartiadev.auth_service.dto.AdminStats;
-import com.smartiadev.auth_service.dto.DisputeStats;
+import com.smartiadev.auth_service.client.*;
+import com.smartiadev.auth_service.dto.*;
 import com.smartiadev.auth_service.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +15,9 @@ public class AdminStatsService {
     private final RentalClient rentalClient;
     private final ReviewClient reviewClient;
     private final DisputeClient disputeClient;
+    private final AuctionClient auctionClient;
+    private final SubscriptionClient subscriptionClient;
+    private final PaymentClient paymentClient;
 
     public AdminStats getStats() {
 
@@ -42,6 +41,14 @@ public class AdminStatsService {
         // ⚖️ DISPUTES
         DisputeStats disputeStats = disputeClient.getDisputeStats();
 
+        // 🔨 AUCTIONS
+        AuctionStats auctionStats = auctionClient.getAuctionStats();
+
+        // 💎 SUBSCRIPTIONS
+        SubscriptionStats subscriptionStats = subscriptionClient.getStats();
+
+        // 💳 PAYMENTS
+        PaymentStats paymentStats = paymentClient.getStats();
 
         return new AdminStats(
                 totalUsers,
@@ -53,7 +60,10 @@ public class AdminStatsService {
                 totalRevenue,
                 totalReviews,
                 avgRating != null ? avgRating : 0.0,
-                disputeStats
+                disputeStats,
+                auctionStats,
+                subscriptionStats,
+                paymentStats
         );
     }
 }

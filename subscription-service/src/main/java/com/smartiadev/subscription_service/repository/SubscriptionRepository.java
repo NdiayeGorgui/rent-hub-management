@@ -3,6 +3,7 @@ package com.smartiadev.subscription_service.repository;
 import com.smartiadev.subscription_service.entity.Subscription;
 import com.smartiadev.subscription_service.entity.SubscriptionStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +22,12 @@ public interface SubscriptionRepository
             SubscriptionStatus status,
             LocalDateTime date
     );
+
+    // stats
+    Long countByEndDateAfter(LocalDateTime now);
+    Long countByEndDateBefore(LocalDateTime now);
+    Long countByAutoRenewTrue();
+
 
 
 }

@@ -1,5 +1,6 @@
 package com.smartiadev.auth_service.client;
 
+import com.smartiadev.auth_service.dto.SubscriptionStats;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,5 +12,8 @@ public interface SubscriptionClient {
 
     @GetMapping("/api/subscriptions/internal/{userId}")
     boolean isPremium(@PathVariable UUID userId);
+
+    @GetMapping("/api/subscriptions/internal/stats")
+    SubscriptionStats getStats();
 }
 

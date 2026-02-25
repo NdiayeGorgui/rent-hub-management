@@ -23,6 +23,7 @@ public class AuctionController {
 
     private final AuctionService service;
 
+
     /* ============================
        CREATE AUCTION
        ============================ */
@@ -88,4 +89,5 @@ public class AuctionController {
     public List<AuctionDto> listOpen() {
         return service.getOpenAuctions();
     }
+
 }
