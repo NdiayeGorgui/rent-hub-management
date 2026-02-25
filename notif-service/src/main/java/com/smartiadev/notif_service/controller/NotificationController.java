@@ -1,5 +1,6 @@
 package com.smartiadev.notif_service.controller;
 
+import com.smartiadev.base_domain_service.dto.AuctionWinnerNotification;
 import com.smartiadev.notif_service.entity.Notification;
 import com.smartiadev.notif_service.repository.NotificationRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -83,6 +84,19 @@ public class NotificationController {
         notification.setRead(true);
         repository.save(notification);
     }
+
+    /* =====================
+       MARK ALL NOTIFICATIONS AS READ
+       ===================== */
+    @Operation(
+            summary = "Mark all notifications as read",
+            description = "Mark all notifications of the authenticated user as read."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "All notifications marked as read"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Invalid or missing JWT"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
     @PutMapping("/me/read-all")
     public void markAllAsRead(
             @AuthenticationPrincipal Jwt jwt
@@ -91,5 +105,25 @@ public class NotificationController {
         repository.markAllAsRead(userId);
     }
 
+    /* =====================
+       NOTIFY AUCTION WINNER
+       ===================== */
+    @Operation(
+            summary = "Internal-Send auction winner notification",
+            description = "Receive an auction winner event and trigger a notification. Intended to be called by internal services (e.g., auction-service)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Winner notification processed successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request body",
+                    content = @Content(schema = @Schema(implementation = AuctionWinnerNotification.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PostMapping("/auction-winner")
+    public void notifyWinner(@RequestBody AuctionWinnerNotification dto) {
+
+        System.out.println("🏆 WINNER NOTIFIED");
+        System.out.println(dto);
+    }
 }
 

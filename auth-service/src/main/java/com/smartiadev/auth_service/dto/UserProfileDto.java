@@ -18,6 +18,9 @@ public class UserProfileDto {
     // LOCALISATION
     private String city;
 
+    // ⭐ PREMIUM (INFO CALCULÉE)
+    private boolean premium;
+
     // RÉPUTATION
     private Double averageRating;
     private Long reviewsCount;

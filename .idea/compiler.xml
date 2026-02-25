@@ -25,8 +25,10 @@
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
         </processorPath>
         <module name="auth-service" />
+        <module name="subscription-service" />
         <module name="configuration-service" />
         <module name="review-service" />
+        <module name="api-gateway" />
         <module name="item-service" />
         <module name="notif-service" />
         <module name="dispute-service" />

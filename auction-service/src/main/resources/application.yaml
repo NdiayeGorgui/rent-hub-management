@@ -21,7 +21,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        default_schema: dispute_schema
+        default_schema: auction_schema
 
   kafka:
     bootstrap-servers: localhost:9092   # ⚠️ si Docker -> kafka:9092

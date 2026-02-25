@@ -21,15 +21,24 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-        default_schema: dispute_schema
+        default_schema: subscription_schema
 
   kafka:
-    bootstrap-servers: localhost:9092   # ⚠️ si Docker -> kafka:9092
+    bootstrap-servers: localhost:9092
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: true
+
+    consumer:
+      group-id: notif-service
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: com.smartiadev.base_domain_service.dto
+        spring.json.use.type.headers: true
 
 eureka:
   client:

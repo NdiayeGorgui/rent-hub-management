@@ -24,7 +24,8 @@ public class SecurityConfig {
 
                         // 🔐 NOTIFICATIONS UTILISATEUR (JWT OBLIGATOIRE)
                         .requestMatchers(
-                                "/api/notifications/**"
+                                "/api/notifications/**",
+                                "/api/auctions/**"
                         ).authenticated()
 
                         // 📘 SWAGGER / OPENAPI
