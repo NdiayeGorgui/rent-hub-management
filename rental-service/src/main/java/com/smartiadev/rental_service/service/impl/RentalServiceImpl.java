@@ -150,6 +150,8 @@ public class RentalServiceImpl implements RentalService {
                 .orElseThrow(() -> new RuntimeException("Rental not found"));
 
         // 🔐 sécurité propriétaire
+        System.out.println("JWT OWNER ID: " + ownerId);
+        System.out.println("RENTAL OWNER ID: " + rental.getOwnerId());
         if (!rental.getOwnerId().equals(ownerId)) {
             throw new RuntimeException("Forbidden");
         }
@@ -279,8 +281,12 @@ public class RentalServiceImpl implements RentalService {
 
                     return new ItemSummaryDto(
                             item.id(),
+                            item.title(),
                             item.pricePerDay(),
-                            rating != null ? rating : 0.0
+                            rating != null ? rating : 0.0,
+                            null,
+                            rental.getStartDate(),
+                            rental.getEndDate()
                     );
                 })
                 .filter(Objects::nonNull) // ⬅️ TRÈS IMPORTANT

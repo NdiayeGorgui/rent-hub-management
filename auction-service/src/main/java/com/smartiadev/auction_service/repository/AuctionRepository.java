@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface AuctionRepository extends JpaRepository<Auction, Long> {
 
@@ -46,4 +47,6 @@ Long countByStatus(AuctionStatus status);
         WHERE a.status = 'CLOSED'
     """)
     Double averageWinningPrice();
+
+    Optional<Auction> findByItemIdAndStatus(Long itemId, AuctionStatus status);
 }

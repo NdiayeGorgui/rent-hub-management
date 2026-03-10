@@ -21,10 +21,36 @@ public class ItemSpecifications {
                                 "%" + city.toLowerCase() + "%");
     }
 
+    public static Specification<Item> searchKeyword(String keyword) {
+        return (root, query, cb) -> {
+
+            if (keyword == null || keyword.isBlank()) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + keyword.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("title")), pattern),
+                    cb.like(cb.lower(root.get("description")), pattern)
+            );
+        };
+    }
+
     public static Specification<Item> hasCategory(Long categoryId) {
         return (root, query, cb) ->
                 categoryId == null ? null :
                         cb.equal(root.get("categoryId"), categoryId);
+    }
+    public static Specification<Item> hasType(String type) {
+        return (root, query, cb) -> {
+
+            if (type == null || type.isEmpty()) {
+                return null;
+            }
+
+            return cb.equal(root.get("type"), type);
+        };
     }
 
     public static Specification<Item> priceBetween(Double min, Double max) {

@@ -3,6 +3,7 @@ package com.smartiadev.review_service.controller;
 import com.smartiadev.review_service.dto.CreateReviewRequest;
 import com.smartiadev.review_service.dto.ReviewDto;
 import com.smartiadev.review_service.entity.Review;
+import com.smartiadev.review_service.repository.ReviewRepository;
 import com.smartiadev.review_service.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,6 +30,7 @@ import java.util.UUID;
 public class ReviewController {
 
     private final ReviewService reviewService;
+    private final ReviewRepository reviewRepository;
 
     /* =====================
       CREATE REVIEW
@@ -142,5 +144,19 @@ public class ReviewController {
         return reviewService.getItemsAverageRatings();
     }
 
+    @GetMapping("/item/{itemId}/count")
+    public Long countReviewsForItem(@PathVariable Long itemId) {
+        return reviewService.countReviewsForItem(itemId);
+    }
 
+    @GetMapping("/rental/{rentalId}/can-review")
+    public boolean canReview(
+            @PathVariable Long rentalId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        System.out.println("User ID: " + userId);
+
+        return reviewRepository.existsByRentalIdAndReviewerId(rentalId, userId);
+    }
 }

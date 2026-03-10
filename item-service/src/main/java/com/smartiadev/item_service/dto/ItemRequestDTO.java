@@ -1,5 +1,6 @@
 package com.smartiadev.item_service.dto;
 
+import com.smartiadev.item_service.entity.ItemType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -18,8 +19,9 @@ public class ItemRequestDTO {
 
     @NotNull
     private Long categoryId;
-
     @NotNull
+    private ItemType type;
+
     @Positive
     private Double pricePerDay;
 
@@ -28,6 +30,6 @@ public class ItemRequestDTO {
 
     private String address;
 
-    @NotNull
-    private List<String> imageUrls;
+   // @NotNull
+   // private List<String> imageUrls;
 }

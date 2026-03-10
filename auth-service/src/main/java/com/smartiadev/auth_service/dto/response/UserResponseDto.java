@@ -21,4 +21,5 @@ public class UserResponseDto {
     private boolean enabled;
     private LocalDateTime createdAt;
     private Set<String> roles;
+    private String subscription;
 }

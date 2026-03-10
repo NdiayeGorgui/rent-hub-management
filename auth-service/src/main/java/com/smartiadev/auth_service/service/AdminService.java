@@ -1,5 +1,7 @@
 package com.smartiadev.auth_service.service;
 
+import com.smartiadev.auth_service.client.SubscriptionClient;
+import com.smartiadev.auth_service.dto.PremiumStatusResponse;
 import com.smartiadev.auth_service.dto.response.UserResponseDto;
 import com.smartiadev.auth_service.entity.User;
 import com.smartiadev.auth_service.repository.UserRepository;
@@ -14,6 +16,7 @@ import java.util.UUID;
 public class AdminService {
 
     private final UserRepository userRepository;
+    private final SubscriptionClient subscriptionClient;
 
 
     public void suspendUser(UUID userId) {
@@ -38,6 +41,16 @@ public class AdminService {
     }
 
     private UserResponseDto mapToDto(User user) {
+
+        boolean premium = false;
+
+        try {
+            PremiumStatusResponse response =
+                    subscriptionClient.getPremiumStatus(user.getId());
+
+            premium = response.premium();
+        } catch (Exception ignored) {}
+
         return UserResponseDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
@@ -49,6 +62,7 @@ public class AdminService {
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())
                 .roles(user.getRoles())
+                .subscription(premium ? "PREMIUM" : "STANDARD")
                 .build();
     }
 }

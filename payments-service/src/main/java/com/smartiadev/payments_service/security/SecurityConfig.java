@@ -17,7 +17,7 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
+               // .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
@@ -32,6 +32,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/payments/**"
                         ).permitAll()
+                        .requestMatchers("/api/payments/stripe/webhook")
+                        .permitAll()
 
                         // 🔐 ADMIN
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMIN")

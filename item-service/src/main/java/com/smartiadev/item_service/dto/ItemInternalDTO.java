@@ -5,8 +5,10 @@ import java.util.UUID;
 
 public record ItemInternalDTO(
         Long id,
+        String title,
         UUID ownerId,
         boolean active,
-        double pricePerDay
+        String type,
+        Double pricePerDay
 ) {}
 

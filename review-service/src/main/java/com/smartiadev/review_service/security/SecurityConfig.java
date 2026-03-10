@@ -18,7 +18,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
+               // .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
@@ -27,12 +27,14 @@ public class SecurityConfig {
                                 "/api/reviews/user/*/average",
                                 "/api/reviews/user/*/count",
                                 "/api/reviews/item/*/average",
+                                "/api/reviews/item/*/count",
                                 "/api/reviews/item/*",
                                 "/api/reviews/items/**",
                                 "/api/reviews/items/*/rating",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers("/api/reviews/rental/**").permitAll()
 
                         // 🔓 Autoriser OPTIONS pour CORS
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
@@ -65,7 +67,7 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
+   /* @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
 
         org.springframework.web.cors.CorsConfiguration configuration =
@@ -82,5 +84,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
+    }*/
 }

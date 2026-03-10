@@ -1,11 +1,12 @@
 package com.smartiadev.review_service.service;
 
 import com.smartiadev.base_domain_service.dto.ReviewCreatedEvent;
+import com.smartiadev.review_service.client.AuthClient;
+import com.smartiadev.review_service.client.ItemClient;
 import com.smartiadev.review_service.client.RentalClient;
-import com.smartiadev.review_service.dto.CreateReviewRequest;
-import com.smartiadev.review_service.dto.RentalInfoDTO;
-import com.smartiadev.review_service.dto.ReviewDto;
+import com.smartiadev.review_service.dto.*;
 import com.smartiadev.review_service.entity.Review;
+import com.smartiadev.review_service.entity.ReviewType;
 import com.smartiadev.review_service.kafka.ReviewEventProducer;
 import com.smartiadev.review_service.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,8 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final RentalClient rentalClient;
+    private final AuthClient authClient;
+    private final ItemClient itemClient;
     private final ReviewEventProducer eventProducer;
 
     /* =========================
@@ -49,18 +52,31 @@ public class ReviewService {
             throw new IllegalStateException("Forbidden");
         }
 
-        // 4️⃣ Un seul avis par location
-        if (reviewRepository.existsByRentalId(request.rentalId())) {
+        // 4️⃣ Un seul avis par location(1 pour owner envers le renter, 1 pour renter envers le item)
+        if (reviewRepository.existsByRentalIdAndReviewerId(
+                request.rentalId(),
+                reviewerId)) {
+            throw new IllegalStateException(
+                    "User already reviewed this rental"
+            );
+        }
+       /* if (reviewRepository.existsByRentalId(request.rentalId())) {
             throw new IllegalStateException(
                     "Review already exists for this rental"
             );
-        }
+        }*/
 
         // 5️⃣ Déterminer l’utilisateur noté
-        UUID reviewedUserId =
-                reviewerId.equals(rental.ownerId())
-                        ? rental.renterId()
-                        : rental.ownerId();
+        ReviewType type;
+        UUID reviewedUserId = null;
+
+        if (reviewerId.equals(rental.ownerId())) {
+            type = ReviewType.USER;
+            reviewedUserId = rental.renterId();
+        } else {
+            type = ReviewType.ITEM;
+            reviewedUserId = rental.ownerId();
+        }
 
         // 6️⃣ Créer l’avis
         Review review = Review.builder()
@@ -71,6 +87,7 @@ public class ReviewService {
                 .rating(request.rating())
                 .comment(request.comment())
                 .createdAt(LocalDateTime.now())
+                .type(type)
                 .build();
 
         Review saved = reviewRepository.save(review);
@@ -95,7 +112,11 @@ public class ReviewService {
        ========================= */
 
     public List<ReviewDto> getReviewsByItemId(Long itemId) {
-        return reviewRepository.findByItemId(itemId)
+
+        ItemInternalDTO item = itemClient.getItemById(itemId);
+
+        return reviewRepository
+                .findByItemIdAndReviewerIdNot(itemId, item.ownerId())
                 .stream()
                 .map(this::mapToDto)
                 .toList();
@@ -108,9 +129,20 @@ public class ReviewService {
                 .toList();
     }
 
-    public Double getAverageRatingForItem(Long itemId) {
+   /* public Double getAverageRatingForItem(Long itemId) {
         return reviewRepository.getAverageRatingByItem(itemId);
-    }
+    }*/
+   public Double getAverageRatingForItem(Long itemId) {
+
+       // 🔥 récupérer ownerId
+       ItemInternalDTO item = itemClient.getItemById(itemId);
+       UUID ownerId = item.ownerId();
+
+       Double avg = reviewRepository
+               .getAverageRatingByItemExcludingOwner(itemId, ownerId);
+
+       return avg != null ? avg : 0.0;
+   }
 
     public Double getAverageRatingForUser(UUID userId) {
         return reviewRepository.getAverageRatingByUser(userId);
@@ -122,6 +154,17 @@ public class ReviewService {
 
     public List<Long> getItemIdsWithMinRating(Double minRating) {
         return reviewRepository.findItemIdsWithMinRating(minRating);
+    }
+
+    public Long countReviewsForItem(Long itemId) {
+
+        // 🔥 récupérer ownerId
+        ItemInternalDTO item = itemClient.getItemById(itemId);
+        UUID ownerId = item.ownerId();
+
+        // 🔥 compter uniquement les locataires
+        return reviewRepository
+                .countByItemIdAndReviewerIdNot(itemId, ownerId);
     }
 
     public Map<Long, Double> getItemsAverageRatings() {
@@ -140,13 +183,26 @@ public class ReviewService {
        ========================= */
 
     private ReviewDto mapToDto(Review review) {
+
+        String username = "Unknown";
+
+        try {
+            UserProfileInternalDto user = authClient.getUserById(review.getReviewerId());
+            username = user.getUsername();
+        } catch (Exception e) {
+            System.out.println("Auth service unavailable");
+        }
+
         return new ReviewDto(
                 review.getId(),
                 review.getItemId(),
                 review.getReviewerId(),
                 review.getReviewedUserId(),
+                username,
                 review.getRating(),
                 review.getComment()
         );
     }
+
+
 }

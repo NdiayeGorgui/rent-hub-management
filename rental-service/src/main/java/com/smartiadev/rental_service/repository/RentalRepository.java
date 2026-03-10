@@ -15,6 +15,10 @@ public interface RentalRepository extends JpaRepository<Rental, Long> {
 
     List<Rental> findByRenterId(UUID renterId);
     Page<Rental> findByRenterId(UUID renterId, Pageable pageable);
+    List<Rental> findByStatusAndStartDateBefore(
+            RentalStatus status,
+            LocalDate date
+    );
 
 
     List<Rental> findByOwnerId(UUID ownerId);

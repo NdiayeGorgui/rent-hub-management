@@ -1,7 +1,9 @@
 package com.smartiadev.item_service.controller;
 
 import com.smartiadev.item_service.dto.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartiadev.item_service.entity.Item;
+import com.smartiadev.item_service.entity.ItemType;
 import com.smartiadev.item_service.exception.ItemNotFoundException;
 import com.smartiadev.item_service.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,11 +19,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -35,6 +39,8 @@ import java.util.UUID;
 public class ItemController {
 
     private final ItemService service;
+
+    private final ObjectMapper objectMapper;
 
     /* =====================
        CREATE ITEM (JWT)
@@ -130,11 +136,18 @@ public class ItemController {
     public ItemInternalDTO getInternalItem(@PathVariable Long id) throws ItemNotFoundException {
         ItemResponseDTO item = service.findById(id);
 
+        Double pricePerDay = null;
+        if (item.getType() == ItemType.RENTAL) {
+            pricePerDay = item.getPricePerDay();
+        }
+
         return new ItemInternalDTO(
                 item.getId(),
+                item.getTitle(),
                 item.getOwnerId(),
                 item.getActive(),
-                item.getPricePerDay()
+                item.getType().name(),
+                pricePerDay
         );
     }
 
@@ -144,6 +157,7 @@ public class ItemController {
     @Operation(summary = "Search items", description = "Search for items using filters (city, category, price, rating, availability) with sorting and pagination.")
     @GetMapping("/search")
     public Page<ItemSearchResponseDto> searchItems(
+            @RequestParam(required = false) String keyword,
 
             // 📍 LOCALISATION
             @RequestParam(required = false) String city,
@@ -157,6 +171,7 @@ public class ItemController {
 
             // ⭐ NOTE MINIMALE
             @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) String type,
 
             // 📅 DISPONIBILITÉ
             @RequestParam(required = false)
@@ -194,6 +209,7 @@ public class ItemController {
         Pageable pageable = PageRequest.of(page, size, stableSort);
 
         return service.searchItems(
+                keyword,
                 city,
                 categoryId,
                 minPrice,
@@ -201,6 +217,7 @@ public class ItemController {
                 startDate,
                 endDate,
                 minRating,
+                type,
                 pageable
         );
     }
@@ -218,4 +235,23 @@ public class ItemController {
         return service.getItemDetails(id);
     }
 
+
+
+
+
+    @PostMapping(value = "/with-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ItemResponseDTO> createWithImages(
+            @RequestPart("data") String data,
+            @RequestPart("images") List<MultipartFile> images,
+            @AuthenticationPrincipal Jwt jwt
+    ) throws Exception {
+
+        ItemRequestDTO dto = objectMapper.readValue(data, ItemRequestDTO.class);
+
+        UUID ownerId = UUID.fromString(jwt.getSubject());
+
+        return ResponseEntity.ok(
+                service.createWithImages(dto, images, ownerId)
+        );
+    }
 }

@@ -5,6 +5,7 @@ import com.smartiadev.notif_service.entity.Notification;
 import com.smartiadev.notif_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 public class PaymentSuccessConsumer {
 
     private final NotificationRepository repository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @KafkaListener(
             topics = "payment.completed",
@@ -21,7 +23,7 @@ public class PaymentSuccessConsumer {
     )
     public void onPaymentSuccess(PaymentCompletedEvent event) {
 
-        repository.save(
+        Notification notification = repository.save(
                 new Notification(
                         null,
                         event.userId(),
@@ -32,8 +34,14 @@ public class PaymentSuccessConsumer {
                 )
         );
 
+        // 📡 envoyer au frontend via websocket
+        messagingTemplate.convertAndSend(
+                "/topic/notifications/" + event.userId(),
+                notification
+        );
+
         System.out.println(
-                "💳 Notification paiement réussi sauvegardée : "
+                "💳 Notification paiement réussi envoyée + websocket : "
                         + event.userId()
         );
     }

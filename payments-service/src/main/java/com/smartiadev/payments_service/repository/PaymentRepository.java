@@ -5,11 +5,14 @@ import com.smartiadev.payments_service.entity.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface PaymentRepository
         extends JpaRepository<Payment, Long> {
+    List<Payment> findByStatus(PaymentStatus status);
 
     List<Payment> findByUserId(UUID userId);
 
@@ -22,5 +25,26 @@ public interface PaymentRepository
         WHERE p.status = 'SUCCESS'
     """)
     Double sumSuccessfulPayments();
+
+    @Query("""
+        SELECT SUM(p.amount)
+        FROM Payment p
+        WHERE p.status = 'SUCCESS'
+    """)
+    Double totalRevenue();
+
+    @Query("""
+        SELECT SUM(p.amount)
+        FROM Payment p
+        WHERE p.status = 'SUCCESS'
+          AND p.createdAt >= :start
+          AND p.createdAt <= :end
+    """)
+    Double revenueBetween(
+            LocalDateTime start,
+            LocalDateTime end
+    );
+
+    Optional<Payment> findByPaymentIntentId(String paymentIntentId);
 }
 

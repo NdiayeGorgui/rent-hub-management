@@ -13,6 +13,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,6 +72,7 @@ public class ProfileService {
                 .badge(badge)
                 .publishedItems(publishedItems)
                 .rentedItems(rentedItems)
+                .roles(new ArrayList<>(user.getRoles()))
                 .build();
     }
 

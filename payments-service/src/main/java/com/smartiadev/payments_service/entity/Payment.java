@@ -28,6 +28,12 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     private PaymentStatus status; // SUCCESS, FAILED, PENDING
 
+    // 🔥 STRIPE
+    @Column(unique = true)
+    private String paymentIntentId;
+
+    private String failureReason;
+
     private LocalDateTime createdAt;
 }
 

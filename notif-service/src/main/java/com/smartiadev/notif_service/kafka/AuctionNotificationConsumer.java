@@ -5,23 +5,30 @@ import com.smartiadev.notif_service.entity.Notification;
 import com.smartiadev.notif_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+
 
 @Component
 @RequiredArgsConstructor
 public class AuctionNotificationConsumer {
 
     private final NotificationRepository repository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @KafkaListener(
             topics = "auction.closed",
             groupId = "notification-group"
     )
     public void onAuctionClosed(AuctionClosedEvent event) {
+
+        Notification notification;
+
         if (event.winnerId() != null) {
-            repository.save(
+
+            notification = repository.save(
                     new Notification(
                             null,
                             event.winnerId(),
@@ -33,12 +40,17 @@ public class AuctionNotificationConsumer {
                     )
             );
 
-            System.out.println(
-                    "🏆 Notification gagnant enchère envoyée : " + event.winnerId()
+            // 📡 envoyer au frontend
+            messagingTemplate.convertAndSend(
+                    "/topic/notifications/" + event.winnerId(),
+                    notification
             );
-        }else {
-            // 📭 Aucune enchère → notifier le propriétaire (optionnel)
-            repository.save(
+
+            System.out.println("🏆 Notification envoyée + websocket");
+
+        } else {
+
+            notification = repository.save(
                     new Notification(
                             null,
                             event.ownerId(),
@@ -49,7 +61,10 @@ public class AuctionNotificationConsumer {
                     )
             );
 
+            messagingTemplate.convertAndSend(
+                    "/topic/notifications/" + event.ownerId(),
+                    notification
+            );
         }
-
     }
 }

@@ -33,6 +33,10 @@ public class RentalEventProducer {
         kafkaTemplate.send("rental.ended", event);
     }
 
+    public void sendRentalRequestExpired(RentalRequestExpiredEvent event) {
+        kafkaTemplate.send("rental.request.expired", event);
+    }
+
 }
 
 

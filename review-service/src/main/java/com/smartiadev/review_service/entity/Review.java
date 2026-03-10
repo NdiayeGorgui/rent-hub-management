@@ -10,7 +10,8 @@ import java.util.UUID;
 @Table(
         name = "reviews",schema = "review_schema",
         uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"rentalId"})
+                @UniqueConstraint(
+                        columnNames = {"rental_id", "reviewer_id"})
         }
 )
 @Getter
@@ -25,7 +26,7 @@ public class Review {
     private Long id;
 
     // 🔗 Location
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private Long rentalId;
 
     // 🔗 Article
@@ -47,6 +48,9 @@ public class Review {
     // 💬 Commentaire
     @Column(length = 1000)
     private String comment;
+
+    @Enumerated(EnumType.STRING)
+    private ReviewType type;
 
     // 🕒 Audit
     private LocalDateTime createdAt;

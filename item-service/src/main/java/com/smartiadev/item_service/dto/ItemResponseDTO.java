@@ -1,5 +1,7 @@
 package com.smartiadev.item_service.dto;
 
+import com.smartiadev.item_service.entity.ItemType;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -16,6 +18,7 @@ public class ItemResponseDTO {
     private String title;
     private String description;
     private Long categoryId;
+    private ItemType type;
     private Double pricePerDay;
     private String city;
     private String address;

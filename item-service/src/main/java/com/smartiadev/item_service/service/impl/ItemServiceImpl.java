@@ -3,16 +3,20 @@ package com.smartiadev.item_service.service.impl;
 import com.smartiadev.item_service.client.AuthClient;
 import com.smartiadev.item_service.client.RentalClient;
 import com.smartiadev.item_service.client.ReviewClient;
+import com.smartiadev.item_service.client.SubscriptionClient;
 import com.smartiadev.item_service.dto.*;
 import com.smartiadev.item_service.entity.Item;
+import com.smartiadev.item_service.entity.ItemType;
 import com.smartiadev.item_service.repository.ItemRepository;
 import com.smartiadev.item_service.repository.specification.ItemSpecifications;
+import com.smartiadev.item_service.service.ImageStorageService;
 import com.smartiadev.item_service.service.ItemService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -28,21 +32,42 @@ public class ItemServiceImpl implements ItemService {
     private final ReviewClient reviewClient;
     private final RentalClient rentalClient;
     private final AuthClient authClient;
+    private final SubscriptionClient subscriptionClient;
+    private final ImageStorageService imageStorageService;
+    private static final String ITEM_SERVICE_BASE_URL = "http://localhost:8080"; // gateway
     /* =====================
        CREATE ITEM
        ===================== */
     @Override
     public ItemResponseDTO create(ItemRequestDTO dto, UUID ownerId) {
 
+    /* =========================
+       🔥 VALIDATION TYPE / PRIX
+       ========================= */
+
+        validateItem(dto);
+
+        //Bloque AUCTION
+        PremiumStatusResponse status = subscriptionClient.getPremiumStatus(ownerId);
+
+        if (dto.getType() == ItemType.AUCTION && !status.premium()) {
+            throw new IllegalStateException("Premium required for auction");
+        }
+
+    /* =========================
+       CONSTRUCTION ENTITY
+       ========================= */
+
         Item item = Item.builder()
                 .ownerId(ownerId)
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .categoryId(dto.getCategoryId())
+                .type(dto.getType()) // 🔥 IMPORTANT (tu l’avais oublié)
                 .pricePerDay(dto.getPricePerDay())
                 .city(dto.getCity())
                 .address(dto.getAddress())
-                .imageUrls(dto.getImageUrls())
+               // .imageUrls(dto.getImageUrls())
                 .active(true)
                 .build();
 
@@ -129,6 +154,7 @@ public class ItemServiceImpl implements ItemService {
                 item.getTitle(),
                 item.getDescription(),
                 item.getCategoryId(),
+                item.getType(),
                 item.getPricePerDay(),
                 item.getCity(),
                 item.getAddress(),
@@ -188,6 +214,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Page<ItemSearchResponseDto> searchItems(
+            String keyword,
             String city,
             Long categoryId,
             Double minPrice,
@@ -195,6 +222,7 @@ public class ItemServiceImpl implements ItemService {
             LocalDate startDate,
             LocalDate endDate,
             Double minRating,
+            String  type,
             Pageable pageable
     ) {
 
@@ -231,9 +259,11 @@ public class ItemServiceImpl implements ItemService {
                 Specification.where(
                                 ItemSpecifications.isActive(true)
                         )
+                        .and(ItemSpecifications.searchKeyword(keyword))
                         .and(ItemSpecifications.hasCity(city))
                         .and(ItemSpecifications.hasCategory(categoryId))
                         .and(ItemSpecifications.priceBetween(minPrice, maxPrice))
+                        .and(ItemSpecifications.hasType(type))
                         .and(ItemSpecifications.excludeIds(unavailableItemIds))
                         .and(ItemSpecifications.includeIds(ratedItemIds));
 
@@ -252,29 +282,48 @@ public class ItemServiceImpl implements ItemService {
     /* =========================
        6️⃣ MAPPING DTO
        ========================= */
-        return itemsPage.map(item ->
-                new ItemSearchResponseDto(
-                        item.getId(),
-                        item.getTitle(),
-                        item.getCity(),
-                        item.getPricePerDay(),
-                        ratings.getOrDefault(item.getId(), 0.0)
-                )
-        );
+        return itemsPage.map(item -> {
+            String imageUrl = null;
+            if (item.getImageUrls() != null && !item.getImageUrls().isEmpty()) {
+                // Ici on prend la première image et on préfixe avec l'URL du gateway
+                imageUrl = ITEM_SERVICE_BASE_URL + item.getImageUrls().get(0);
+            }
+
+            return new ItemSearchResponseDto(
+                    item.getId(),
+                    item.getTitle(),
+                    item.getDescription(),
+                    item.getCity(),
+                    item.getPricePerDay(),
+                    ratings.getOrDefault(item.getId(), 0.0),
+                    item.getType().name(),
+                    imageUrl
+            );
+        });
     }
 
-
-@Override
+    @Override
     public List<ItemSummaryDto> getPublishedItemsByUser(UUID userId) {
 
         Map<Long, Double> ratings = reviewClient.getItemsRatings();
 
         return repository.findByOwnerId(userId).stream()
-                .map(item -> new ItemSummaryDto(
-                        item.getId(),
-                        item.getPricePerDay(),
-                        ratings.getOrDefault(item.getId(), 0.0)
-                ))
+                .map(item -> {
+                    // Si l'item est RENTAL, garder pricePerDay, sinon mettre null ou 0
+                    Double price = item.getType() == ItemType.RENTAL
+                            ? item.getPricePerDay()
+                            : null; // ou 0.0 si tu préfères
+
+                    return new ItemSummaryDto(
+                            item.getId(),
+                            item.getTitle(),
+                            price,
+                            ratings.getOrDefault(item.getId(), 0.0),
+                            item.getCreatedAt(),
+                            null,
+                            null
+                    );
+                })
                 .toList();
     }
 
@@ -287,51 +336,88 @@ public class ItemServiceImpl implements ItemService {
                         new RuntimeException("Item not found"));
 
         // 2️⃣ Rating de l’item
-        Double itemRating =
-                reviewClient.getAverageRatingForItem(itemId);
-
-        Double safeItemRating =
-                itemRating != null ? itemRating : 0.0;
+        Double itemRating = reviewClient.getAverageRatingForItem(itemId);
+        Double safeItemRating = itemRating != null ? itemRating : 0.0;
 
         // 3️⃣ Publisher (ownerId)
-        UserProfileInternalDto user =
-                authClient.getUserProfile(item.getOwnerId());
-
+        UserProfileInternalDto user = authClient.getUserProfile(item.getOwnerId());
         PublisherDto publisher = PublisherDto.builder()
                 .userId(user.getUserId())
                 .username(user.getUsername())
                 .fullName(user.getFullName())
                 .city(user.getCity())
-                .averageRating(
-                        user.getAverageRating() != null
-                                ? user.getAverageRating()
-                                : 0.0
-                )
-                .reviewsCount(
-                        user.getReviewsCount() != null
-                                ? user.getReviewsCount()
-                                : 0L
-                )
+                .averageRating(user.getAverageRating() != null ? user.getAverageRating() : 0.0)
+                .reviewsCount(user.getReviewsCount() != null ? user.getReviewsCount() : 0L)
                 .badge(user.getBadge())
                 .build();
 
         // 4️⃣ Composition finale
-        return ItemDetailsDto.builder()
+        ItemDetailsDto.ItemDetailsDtoBuilder builder = ItemDetailsDto.builder()
                 .itemId(item.getId())
                 .title(item.getTitle())
                 .description(item.getDescription())
                 .categoryId(item.getCategoryId())
-                .pricePerDay(item.getPricePerDay())
                 .city(item.getCity())
                 .address(item.getAddress())
                 .imageUrls(item.getImageUrls())
                 .active(item.getActive())
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
+                .type(item.getType())
                 .averageRating(safeItemRating)
-                .publisher(publisher)
-                .build();
+                .publisher(publisher);
+
+        // Ajouter pricePerDay uniquement si type RENTAL
+        if (item.getType() == ItemType.RENTAL) {
+            builder.pricePerDay(item.getPricePerDay());
+        }
+
+        return builder.build();
     }
 
+    @Override
+    public ItemResponseDTO createWithImages(
+            ItemRequestDTO dto,
+            List<MultipartFile> images,
+            UUID ownerId
+    ) {
 
+        validateItem(dto);
+
+        PremiumStatusResponse status = subscriptionClient.getPremiumStatus(ownerId);
+
+        if (dto.getType() == ItemType.AUCTION && !status.premium()) {
+            throw new IllegalStateException("Premium required for auction");
+        }
+
+        List<String> imageUrls = imageStorageService.uploadImages(images);
+
+        Item item = Item.builder()
+                .ownerId(ownerId)
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .categoryId(dto.getCategoryId())
+                .type(dto.getType())
+                .pricePerDay(dto.getPricePerDay())
+                .city(dto.getCity())
+                .address(dto.getAddress())
+                .imageUrls(imageUrls)
+                .active(true)
+                .build();
+
+        Item saved = repository.save(item);
+
+        return map(saved);
+    }
+
+    private void validateItem(ItemRequestDTO dto) {
+
+        if (dto.getType() == ItemType.RENTAL && dto.getPricePerDay() == null) {
+            throw new IllegalArgumentException("pricePerDay is required for rental items");
+        }
+
+        if (dto.getType() == ItemType.AUCTION && dto.getPricePerDay() != null) {
+            throw new IllegalArgumentException("pricePerDay must be null for auction items");
+        }
+    }
 }

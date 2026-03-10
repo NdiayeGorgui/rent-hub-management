@@ -32,7 +32,7 @@ public class AdminStatsService {
         // 🔁 RENTALS
         Long totalRentals = rentalClient.countAllRentals();
         Long activeRentals = rentalClient.countActiveRentals();
-        Double totalRevenue = rentalClient.getTotalRevenue();
+       // Double totalRevenue = rentalClient.getTotalRevenue();
 
         // ⭐ REVIEWS
         Long totalReviews = reviewClient.countAllReviews();
@@ -49,6 +49,8 @@ public class AdminStatsService {
 
         // 💳 PAYMENTS
         PaymentStats paymentStats = paymentClient.getStats();
+
+        Double totalRevenue = paymentStats.totalAmount();
 
         return new AdminStats(
                 totalUsers,

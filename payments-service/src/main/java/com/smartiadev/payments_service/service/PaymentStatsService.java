@@ -18,6 +18,7 @@ public class PaymentStatsService {
                 repository.count(),
                 repository.countByStatus(PaymentStatus.SUCCESS),
                 repository.countByStatus(PaymentStatus.FAILED),
+                repository.countByStatus(PaymentStatus.PENDING),
                 repository.sumSuccessfulPayments()
         );
     }

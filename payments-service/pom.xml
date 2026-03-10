@@ -37,6 +37,13 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>25.8.0</version>
+		</dependency>
+
 		<!-- 🗄️ Spring Data JPA -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

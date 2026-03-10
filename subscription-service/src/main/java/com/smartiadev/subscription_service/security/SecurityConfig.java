@@ -17,7 +17,7 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
+               // .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
 
@@ -32,7 +32,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/subscriptions/**",
                                 "/api/subscriptions/internal/**",
-                                "/api/subscriptions/internal/*/is-premium"
+                                "/api/subscriptions/internal/*/is-premium",
+                                "/api/subscriptions/internal/*/status"
                         ).permitAll()
 
                         // 🔐 ADMIN
@@ -63,7 +64,7 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
+   /* @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
 
         org.springframework.web.cors.CorsConfiguration configuration =
@@ -80,6 +81,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
+    }*/
 
 }

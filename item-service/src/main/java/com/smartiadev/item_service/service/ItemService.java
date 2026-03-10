@@ -3,6 +3,7 @@ package com.smartiadev.item_service.service;
 import com.smartiadev.item_service.dto.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,6 +28,7 @@ public interface ItemService {
     Page<ItemResponseDTO> myPublishedItems(UUID ownerId, int page, int size);
 
     Page<ItemSearchResponseDto> searchItems(
+            String keyword,
             String city,
             Long categoryId,
             Double minPrice,
@@ -34,9 +36,16 @@ public interface ItemService {
             LocalDate startDate,
             LocalDate endDate,
             Double minRating,
+            String  type,
             Pageable pageable
     );
 
     List<ItemSummaryDto> getPublishedItemsByUser(UUID userId);
     ItemDetailsDto getItemDetails(Long itemId);
+
+    ItemResponseDTO createWithImages(
+            ItemRequestDTO dto,
+            List<MultipartFile> images,
+            UUID ownerId
+    );
 }

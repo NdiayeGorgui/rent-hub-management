@@ -1,5 +1,6 @@
 package com.smartiadev.subscription_service.service;
 
+import com.smartiadev.subscription_service.dto.PremiumStatusResponse;
 import com.smartiadev.subscription_service.entity.Subscription;
 import com.smartiadev.subscription_service.entity.SubscriptionStatus;
 import com.smartiadev.subscription_service.repository.SubscriptionRepository;
@@ -19,6 +20,21 @@ public class SubscriptionService {
         return repository.existsByUserIdAndStatus(
                 userId, SubscriptionStatus.ACTIVE
         );
+    }
+
+    public PremiumStatusResponse getPremiumStatus(UUID userId) {
+
+        return repository.findByUserId(userId)
+                .map(sub -> new PremiumStatusResponse(
+                        sub.getStatus() == SubscriptionStatus.ACTIVE,
+                        sub.getEndDate(),
+                        sub.getStatus() == SubscriptionStatus.GRACE_PERIOD
+                ))
+                .orElse(new PremiumStatusResponse(
+                        false,
+                        null,
+                        false
+                ));
     }
 
     public Subscription subscribe(UUID userId) {

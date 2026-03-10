@@ -1,5 +1,6 @@
 package com.smartiadev.item_service.dto;
 
+import com.smartiadev.item_service.entity.ItemType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,6 +23,7 @@ public class ItemDetailsDto {
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private ItemType type;
 
     private Double averageRating;
 

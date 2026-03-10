@@ -1,5 +1,6 @@
 package com.smartiadev.dispute_service.service;
 
+import com.smartiadev.base_domain_service.dto.DisputeCreatedEvent;
 import com.smartiadev.base_domain_service.dto.ItemDeactivatedEvent;
 import com.smartiadev.base_domain_service.dto.UserSuspendedEvent;
 import com.smartiadev.dispute_service.client.AuthClient;
@@ -29,6 +30,7 @@ public class DisputeService {
     private final ItemClient itemClient;
     private final AuthClient authClient;
     private final DisputeEventProducer eventProducer;
+
 
     @Transactional
     public DisputeDto create(CreateDisputeRequest request, UUID userId) {
@@ -64,7 +66,22 @@ public class DisputeService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        return map(repository.save(dispute));
+        // sauvegarde
+        Dispute saved = repository.save(dispute);
+
+        // 🔔 publication de l'évènement Kafka
+        eventProducer.disputeCreated(
+                new DisputeCreatedEvent(
+                        saved.getId(),
+                        saved.getRentalId(),
+                        saved.getItemId(),
+                        saved.getOpenedBy(),
+                        saved.getReportedUserId(),
+                        saved.getReason()
+                )
+        );
+
+        return map(saved);
     }
 
     public List<DisputeDto> myDisputes(UUID userId) {
@@ -87,15 +104,17 @@ public class DisputeService {
         Dispute dispute = repository.findById(id)
                 .orElseThrow();
 
-        dispute.setStatus(DisputeStatus.RESOLVED);
-        dispute.setAdminDecision(request.decision());
+        // statut
+        dispute.setStatus(DisputeStatus.valueOf(request.decision()));
+
+        // commentaire admin
+        dispute.setAdminDecision(request.adminDecision());
+
         dispute.setResolvedAt(LocalDateTime.now());
 
-        // === EXISTANT (Feign)
         if ("DEACTIVATE_ITEM".equals(request.action())) {
             itemClient.deactivate(dispute.getItemId());
 
-            // === NOUVEAU (Kafka)
             eventProducer.itemDeactivated(
                     new ItemDeactivatedEvent(
                             dispute.getItemId(),
@@ -110,7 +129,6 @@ public class DisputeService {
         if ("SUSPEND_USER".equals(request.action())) {
             authClient.suspend(dispute.getReportedUserId());
 
-            // === NOUVEAU (Kafka)
             eventProducer.userSuspended(
                     new UserSuspendedEvent(
                             dispute.getReportedUserId(),

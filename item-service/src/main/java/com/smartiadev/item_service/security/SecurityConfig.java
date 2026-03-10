@@ -18,7 +18,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-                .cors(Customizer.withDefaults())
+                //.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 🔓 Swagger public
@@ -32,6 +32,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/items/user/*/published",
                                 "/api/items/internal/**"
+                        ).permitAll()
+                        // 🔥 Autoriser les images
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(
+                                "/api/items/with-images"
                         ).permitAll()
 
                         // 🔐 routes sécurisées
@@ -67,7 +72,7 @@ public class SecurityConfig {
         return authenticationConverter;
     }
 
-    @Bean
+   /* @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
 
         org.springframework.web.cors.CorsConfiguration configuration =
@@ -84,5 +89,5 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
+    }*/
 }

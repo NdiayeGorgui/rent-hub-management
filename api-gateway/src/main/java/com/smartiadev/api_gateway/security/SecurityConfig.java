@@ -12,8 +12,12 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverterAdapter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.web.cors.reactive.CorsConfigurationSource;
+import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
+import org.springframework.web.cors.CorsConfiguration;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.util.List;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -27,7 +31,14 @@ public class SecurityConfig {
 
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
+
+                // ✅ ACTIVE CORS
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
                 .authorizeExchange(exchange -> exchange
+
+                        // ✅ IMPORTANT : autoriser OPTIONS (preflight)
+                        .pathMatchers(org.springframework.http.HttpMethod.OPTIONS).permitAll()
 
                         // =========================
                         // 🔓 SWAGGER PUBLIC
@@ -54,22 +65,26 @@ public class SecurityConfig {
                                 "/auction-service/v3/api-docs"
                         ).permitAll()
 
-                        // =========================
+                        .pathMatchers("/api/payments/stripe/webhook").permitAll()
+
                         // 🔓 AUTH PUBLIC
-                        // =========================
                         .pathMatchers(
                                 "/api/auth/**",
                                 "/api/profile/**"
                         ).permitAll()
+                        .pathMatchers(
+                                "/ws-notifications/**"
+                        ).permitAll()
+                        // 🔥 Autoriser les images
+                        .pathMatchers("/uploads/**").permitAll()
+                        .pathMatchers(
+                                "/api/subscriptions/internal/**"
+                        ).permitAll()
 
-                        // =========================
                         // 🔐 ADMIN
-                        // =========================
                         .pathMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // =========================
                         // 🔐 AUTHENTIFIED
-                        // =========================
                         .pathMatchers(
                                 "/api/items/**",
                                 "/api/rentals/**",
@@ -109,5 +124,21 @@ public class SecurityConfig {
         jwtConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
 
         return new ReactiveJwtAuthenticationConverterAdapter(jwtConverter);
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowCredentials(true);
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 }

@@ -40,6 +40,10 @@ public class AuctionService {
         if (!item.ownerId().equals(userId)) {
             throw new IllegalStateException("Only owner can create auction");
         }
+        // 🔥 NOUVELLE CONDITION
+        if (item.type() != ItemType.AUCTION) {
+            throw new IllegalStateException("Item is not configured for auction");
+        }
 
         // ❌ Une seule enchère active par item
         if (auctionRepository.existsByItemIdAndStatus(
@@ -124,5 +128,14 @@ public class AuctionService {
                 a.getEndDate(),
                 a.getStatus().name()
         );
+    }
+
+    public AuctionDto getActiveAuctionByItemId(Long itemId) {
+
+        Auction auction = auctionRepository
+                .findByItemIdAndStatus(itemId, AuctionStatus.OPEN)
+                .orElseThrow(() -> new RuntimeException("No active auction found"));
+
+        return map(auction);
     }
 }

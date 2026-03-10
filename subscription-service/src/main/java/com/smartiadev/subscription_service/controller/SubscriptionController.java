@@ -1,5 +1,6 @@
 package com.smartiadev.subscription_service.controller;
 
+import com.smartiadev.subscription_service.dto.PremiumStatusResponse;
 import com.smartiadev.subscription_service.service.SubscriptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,12 +36,20 @@ public class SubscriptionController {
             @ApiResponse(responseCode = "401", description = "Unauthorized - Authentication required"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @GetMapping("/me")
+  /*  @GetMapping("/me")
     public boolean isMyAccountPremium(
             @AuthenticationPrincipal Jwt jwt
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
         return service.isPremium(userId);
+    }*/
+
+    @GetMapping("/me")
+    public PremiumStatusResponse getMyPremiumStatus(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return service.getPremiumStatus(userId);
     }
 
     /* ============================
@@ -104,7 +113,12 @@ public class SubscriptionController {
         return service.isPremium(userId);
     }
 
-
+    @GetMapping("/internal/{userId}/status")
+    public PremiumStatusResponse getPremiumStatusInternal(
+            @PathVariable UUID userId
+    ) {
+        return service.getPremiumStatus(userId);
+    }
     @Operation(
             summary = "Activate premium subscription (internal)",
             description = "Internal endpoint used by payment-service to activate a premium subscription for a specific user after successful payment."

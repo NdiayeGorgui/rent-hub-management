@@ -7,6 +7,7 @@ public record ReviewDto(
         Long itemId,
         UUID reviewerId,
         UUID reviewedUserId,
+        String reviewerUsername,
         Integer rating,
         String comment
 ) {}

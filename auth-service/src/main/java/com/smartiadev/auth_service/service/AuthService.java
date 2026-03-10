@@ -1,5 +1,6 @@
 package com.smartiadev.auth_service.service;
 
+import com.smartiadev.auth_service.dto.UserResponse;
 import com.smartiadev.auth_service.dto.request.LoginRequest;
 import com.smartiadev.auth_service.dto.request.RegisterRequest;
 import com.smartiadev.auth_service.dto.response.AuthResponse;
@@ -7,11 +8,14 @@ import com.smartiadev.auth_service.entity.User;
 import com.smartiadev.auth_service.repository.UserRepository;
 import com.smartiadev.auth_service.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +28,10 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new RuntimeException("Email already used");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Cet email est déjà utilisé"
+            );
         }
 
         User user = User.builder()
@@ -41,23 +48,47 @@ public class AuthService {
 
         userRepository.save(user);
 
-        return new AuthResponse(jwtService.generateToken(user));
+        String token = jwtService.generateToken(user);
+
+        return new AuthResponse(token);
     }
 
     public AuthResponse login(LoginRequest request) {
+
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Email ou mot de passe incorrect"
+                ));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "Email ou mot de passe incorrect"
+            );
         }
 
         if (!user.isEnabled()) {
-            throw new RuntimeException("Account suspended");
+            throw new ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Votre compte a été suspendu"
+            );
         }
 
-
         String token = jwtService.generateToken(user);
+
         return new AuthResponse(token);
+    }
+
+    public UserResponse getUser(UUID id) {
+
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserResponse(
+                user.getId(),
+                user.getFullName(),
+                user.getEmail()
+        );
     }
 }

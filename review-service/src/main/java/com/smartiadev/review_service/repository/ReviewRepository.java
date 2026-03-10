@@ -3,6 +3,7 @@ package com.smartiadev.review_service.repository;
 import com.smartiadev.review_service.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.UUID;
@@ -85,12 +86,7 @@ public interface ReviewRepository
        ========================== */
 
     // Nombre d’avis pour un article
-    @Query("""
-           SELECT COUNT(r)
-           FROM Review r
-           WHERE r.itemId = :itemId
-           """)
-    Long countReviewsForItem(Long itemId);
+    Long countByItemId(Long itemId);
 
     // Note moyenne d’un article
     @Query("""
@@ -101,11 +97,20 @@ public interface ReviewRepository
     Double getAverageRatingForItem(Long itemId);
 
 
-    /* ==========================
-       🔒 CONTRAINTES MÉTIER
-       ========================== */
+ boolean existsByRentalIdAndReviewerId(Long rentalId, UUID reviewerId);
+ List<Review> findByItemIdAndReviewerIdNot(Long itemId, UUID reviewerId);
+ Long countByItemIdAndReviewerIdNot(Long itemId, UUID reviewerId);
 
-
-
+ @Query("""
+       SELECT AVG(r.rating)
+       FROM Review r
+       WHERE r.itemId = :itemId
+       AND r.reviewerId <> :ownerId
+       """)
+ Double getAverageRatingByItemExcludingOwner(
+         @Param("itemId") Long itemId,
+         @Param("ownerId") UUID ownerId
+ );
 }
+
 

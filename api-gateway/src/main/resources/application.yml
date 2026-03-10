@@ -32,6 +32,12 @@ spring:
           predicates:
             - Path=/api/items/**, /api/admin/items/**
 
+        # ROUTE POUR LES IMAGES
+        - id: item-service-uploads
+          uri: http://localhost:8082
+          predicates:
+            - Path=/uploads/**
+
         - id: item-service-docs
           uri: http://localhost:8082
           predicates:
@@ -143,6 +149,14 @@ spring:
             - Path=/auction-service/v3/api-docs
           filters:
             - RewritePath=/auction-service/v3/api-docs, /v3/api-docs
+
+        # =========================
+        # NOTIFICATION WEBSOCKET
+        # =========================
+        - id: notif-service-ws
+          uri: ws://localhost:8085
+          predicates:
+            - Path=/ws-notifications/**
 
 
 

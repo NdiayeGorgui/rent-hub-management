@@ -42,7 +42,7 @@ public class Item {
     /**
      * Prix par jour
      */
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Double pricePerDay;
 
     /**
@@ -80,6 +80,10 @@ public class Item {
     // 🔴 CHANGEMENT IMPORTANT ICI
     @Column(nullable = true)
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ItemType type = ItemType.RENTAL;
 
     /* =====================
        Lifecycle callbacks

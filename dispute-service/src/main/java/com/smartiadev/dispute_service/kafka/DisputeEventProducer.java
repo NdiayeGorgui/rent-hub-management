@@ -1,5 +1,6 @@
 package com.smartiadev.dispute_service.kafka;
 
+import com.smartiadev.base_domain_service.dto.DisputeCreatedEvent;
 import com.smartiadev.base_domain_service.dto.ItemDeactivatedEvent;
 import com.smartiadev.base_domain_service.dto.UserSuspendedEvent;
 import lombok.RequiredArgsConstructor;
@@ -18,5 +19,9 @@ public class DisputeEventProducer {
 
     public void userSuspended(UserSuspendedEvent event) {
         kafkaTemplate.send("user.suspended", event);
+    }
+
+    public void disputeCreated(DisputeCreatedEvent event) {
+        kafkaTemplate.send("dispute.created", event);
     }
 }

@@ -3,6 +3,7 @@ package com.smartiadev.payments_service.controller;
 import com.smartiadev.payments_service.dto.CreatePaymentRequest;
 import com.smartiadev.payments_service.dto.PaymentResponse;
 import com.smartiadev.payments_service.service.PaymentService;
+import com.stripe.model.PaymentIntent;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -15,6 +16,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -63,5 +66,41 @@ public class PaymentController {
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
         return service.createPayment(userId, request);
+    }
+
+    @PostMapping("/confirm/{intentId}")
+    public PaymentResponse confirm(@PathVariable String intentId) throws Exception {
+
+        PaymentIntent intent = PaymentIntent.retrieve(intentId);
+
+        intent.confirm(
+                Map.of(
+                        "payment_method", "pm_card_visa"
+                )
+        );
+
+        return service.confirmPayment(intentId);
+    }
+
+    @GetMapping
+    @Operation(summary = "Get all payments (admin)")
+    public List<PaymentResponse> getAllPayments() {
+        return service.getAllPayments();
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get my payments")
+    public List<PaymentResponse> getMyPayments(
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        return service.getMyPayments(userId);
+    }
+
+    @GetMapping("/pending")
+    public List<PaymentResponse> getPendingPayments() {
+        return service.getPendingPayments();
     }
 }

@@ -90,4 +90,9 @@ public class AuctionController {
         return service.getOpenAuctions();
     }
 
+
+    @GetMapping("/by-item/{itemId}")
+    public AuctionDto getActiveByItemId(@PathVariable Long itemId) {
+        return service.getActiveAuctionByItemId(itemId);
+    }
 }

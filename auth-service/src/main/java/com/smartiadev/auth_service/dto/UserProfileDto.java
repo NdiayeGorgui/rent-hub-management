@@ -29,6 +29,7 @@ public class UserProfileDto {
     // HISTORIQUE
     private List<ItemSummaryDto> publishedItems;
     private List<ItemSummaryDto> rentedItems;
+    private List<String> roles;
 
     // PRIVÉ (plus tard)
     // private String email;
