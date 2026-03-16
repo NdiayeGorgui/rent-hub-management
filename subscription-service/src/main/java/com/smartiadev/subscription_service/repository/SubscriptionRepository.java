@@ -15,8 +15,14 @@ public interface SubscriptionRepository
 
     Optional<Subscription> findByUserId(UUID userId);
 
-    boolean existsByUserIdAndStatus(UUID userId, SubscriptionStatus status);
-    List<Subscription> findByEndDateBeforeAndAutoRenewTrue(LocalDateTime date);
+
+        boolean existsByUserIdAndStatusAndEndDateAfter(
+                UUID userId,
+                SubscriptionStatus status,
+                LocalDateTime now
+        );
+
+
 
     List<Subscription> findByStatusAndEndDateBefore(
             SubscriptionStatus status,
@@ -29,6 +35,6 @@ public interface SubscriptionRepository
     Long countByAutoRenewTrue();
 
 
-
+    List<Subscription> findByEndDateBeforeAndAutoRenewTrue(LocalDateTime date);
 }
 

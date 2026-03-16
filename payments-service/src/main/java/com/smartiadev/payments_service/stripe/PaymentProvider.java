@@ -10,5 +10,7 @@ public interface PaymentProvider {
             UUID userId,
             Double amount
     );
+
+    PaymentProviderResult refund(String paymentIntentId, Double amount);
 }
 

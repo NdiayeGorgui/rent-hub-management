@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+
 @Component
 @RequiredArgsConstructor
 public class PaymentCompletedConsumer {
@@ -18,7 +19,9 @@ public class PaymentCompletedConsumer {
     )
     public void onPaymentCompleted(PaymentCompletedEvent event) {
 
-        service.subscribe(event.userId());
+        // déléguer la logique au service
+        service.handlePaymentCompleted(event);
+
     }
 }
 

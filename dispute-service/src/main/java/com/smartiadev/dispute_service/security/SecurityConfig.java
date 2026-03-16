@@ -64,7 +64,7 @@ public class SecurityConfig {
         return converter;
     }
 
-    @Bean
+   /* @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
 
         org.springframework.web.cors.CorsConfiguration configuration =
@@ -81,6 +81,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-    }
+    }*/
 
 }

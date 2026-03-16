@@ -1,5 +1,6 @@
 package com.smartiadev.payments_service.entity;
 
+import com.smartiadev.base_domain_service.model.PaymentType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,11 +23,15 @@ public class Payment {
     private Long id;
 
     private UUID userId;
-
+    private Long  itemId;;
+    private Long auctionId;
     private Double amount;
 
     @Enumerated(EnumType.STRING)
     private PaymentStatus status; // SUCCESS, FAILED, PENDING
+
+    @Enumerated(EnumType.STRING)
+    private PaymentType type;
 
     // 🔥 STRIPE
     @Column(unique = true)

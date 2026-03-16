@@ -62,7 +62,8 @@ public class SecurityConfig {
                                 "/dispute-service/v3/api-docs",
                                 "/notif-service/v3/api-docs",
                                 "/subscription-service/v3/api-docs",
-                                "/auction-service/v3/api-docs"
+                                "/auction-service/v3/api-docs",
+                                "/messaging-service/v3/api-docs"
                         ).permitAll()
 
                         .pathMatchers("/api/payments/stripe/webhook").permitAll()
@@ -70,15 +71,19 @@ public class SecurityConfig {
                         // 🔓 AUTH PUBLIC
                         .pathMatchers(
                                 "/api/auth/**",
+                                "/api/users/internal/*/auction-strike",
                                 "/api/profile/**"
                         ).permitAll()
                         .pathMatchers(
-                                "/ws-notifications/**"
+                                "/ws-notifications/**",
+                                "/ws-chat/**"
                         ).permitAll()
                         // 🔥 Autoriser les images
                         .pathMatchers("/uploads/**").permitAll()
                         .pathMatchers(
-                                "/api/subscriptions/internal/**"
+                                "/api/subscriptions/internal/**",
+                                "/api/notifications/me",
+                                "/api/messages/**"
                         ).permitAll()
 
                         // 🔐 ADMIN
@@ -93,7 +98,8 @@ public class SecurityConfig {
                                 "/api/disputes/**",
                                 "/api/payments/**",
                                 "/api/subscriptions/**",
-                                "/api/auctions/**"
+                                "/api/auctions/**",
+                                "/api/messages/**"
                         ).authenticated()
 
                         .anyExchange().authenticated()

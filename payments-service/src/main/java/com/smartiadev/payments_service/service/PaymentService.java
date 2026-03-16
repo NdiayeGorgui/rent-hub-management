@@ -1,6 +1,8 @@
 package com.smartiadev.payments_service.service;
 
+import com.smartiadev.base_domain_service.dto.AuctionFeeRefundedEvent;
 import com.smartiadev.base_domain_service.dto.PaymentCreatedEvent;
+import com.smartiadev.base_domain_service.model.PaymentType;
 import com.smartiadev.payments_service.client.UserClient;
 import com.smartiadev.payments_service.dto.CreatePaymentRequest;
 import com.smartiadev.payments_service.dto.PaymentResponse;
@@ -58,6 +60,7 @@ public class PaymentService {
         paymentEventPublisher.publishPaymentCreated(
                 new PaymentCreatedEvent(
                         payment.getId(),
+                        payment.getPaymentIntentId(),
                         payment.getUserId(),
                         fullName,
                         payment.getAmount(),
@@ -67,6 +70,7 @@ public class PaymentService {
 
         return new PaymentResponse(
                 payment.getId(),
+                payment.getItemId(),
                 fullName,
                 payment.getAmount(),
                 payment.getStatus().name(),
@@ -100,6 +104,7 @@ public class PaymentService {
 
         return new PaymentResponse(
                 payment.getId(),
+                payment.getItemId(),
                 fullName,
                 payment.getAmount(),
                 payment.getStatus().name(),
@@ -129,5 +134,121 @@ public class PaymentService {
         repository.save(payment);
 
         return map(payment);
+    }
+
+    public void createRenewalPayment(UUID userId) {
+
+        double amount = 9.99;
+
+        PaymentProviderResult result =
+                paymentProvider.charge(userId, amount);
+
+        if (!result.success()) {
+
+            paymentEventPublisher.publishPaymentFailed(
+                    userId,
+                    result.failureReason()
+            );
+
+            return;
+        }
+
+        Payment payment = repository.save(
+                Payment.builder()
+                        .userId(userId)
+                        .amount(amount)
+                        .status(PaymentStatus.PENDING)
+                        .paymentIntentId(result.transactionId())
+                        .createdAt(LocalDateTime.now())
+                        .build()
+        );
+    }
+
+    @Transactional
+    public PaymentResponse createAuctionFeePayment(UUID userId, Long itemId) {
+
+        double amount = 10.00;
+
+        PaymentProviderResult result =
+                paymentProvider.charge(userId, amount);
+
+        if (!result.success()) {
+
+            paymentEventPublisher.publishPaymentFailed(
+                    userId,
+                    result.failureReason()
+            );
+
+            throw new IllegalStateException(result.failureReason());
+        }
+
+        Payment payment = repository.save(
+
+                Payment.builder()
+                        .userId(userId)
+                        .itemId(itemId)
+                        .amount(amount)
+                        .type(PaymentType.AUCTION_FEE)
+                        .status(PaymentStatus.PENDING)
+                        .paymentIntentId(result.transactionId())
+                        .createdAt(LocalDateTime.now())
+                        .build()
+
+        );
+
+        return map(payment);
+    }
+
+    @Transactional
+    public void refundAuctionFee(String paymentIntentId, UUID ownerId, double amount) {
+
+        PaymentProviderResult result =
+                paymentProvider.refund(paymentIntentId, amount);
+
+        if (!result.success()) {
+            throw new IllegalStateException("Refund failed");
+        }
+
+        repository.save(
+                Payment.builder()
+                        .userId(ownerId)
+                        .amount(amount)
+                        .type(PaymentType.AUCTION_REFUND)
+                        .status(PaymentStatus.SUCCESS)
+                        .createdAt(LocalDateTime.now())
+                        .build()
+        );
+    }
+
+    @Transactional
+    public void refundAuctionFee(Long itemId, UUID ownerId) {
+
+        Payment payment = repository
+                .findByItemIdAndType(itemId, PaymentType.AUCTION_FEE)
+                .orElseThrow();
+
+        PaymentProviderResult result = paymentProvider.refund(
+                payment.getPaymentIntentId(),
+                payment.getAmount()
+        );
+
+        if (!result.success()) {
+            throw new IllegalStateException("Refund failed");
+        }
+
+        repository.save(
+                Payment.builder()
+                        .userId(ownerId)
+                        .itemId(itemId)
+                        .amount(payment.getAmount())
+                        .type(PaymentType.AUCTION_REFUND)
+                        .status(PaymentStatus.SUCCESS)
+                        .createdAt(LocalDateTime.now())
+                        .build()
+        );
+
+        paymentEventPublisher.publishAuctionRefunded(
+                new AuctionFeeRefundedEvent(itemId, ownerId)
+        );
     }
 }

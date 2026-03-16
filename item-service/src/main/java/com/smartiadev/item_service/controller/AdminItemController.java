@@ -1,5 +1,6 @@
 package com.smartiadev.item_service.controller;
 
+import com.smartiadev.item_service.dto.AdminItemDto;
 import com.smartiadev.item_service.dto.ItemResponseDTO;
 import com.smartiadev.item_service.service.ItemService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -78,6 +79,11 @@ public class AdminItemController {
     @PutMapping("/{id}/activate")
     public void activate(@PathVariable Long id) {
         itemService.adminActivate(id);
+    }
+
+    @GetMapping("/full")
+    public List<AdminItemDto> listAllFull() {
+        return itemService.findAllAdminItems();
     }
 }
 

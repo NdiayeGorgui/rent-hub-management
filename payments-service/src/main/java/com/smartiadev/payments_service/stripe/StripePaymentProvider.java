@@ -3,6 +3,7 @@ package com.smartiadev.payments_service.stripe;
 import com.smartiadev.payments_service.dto.PaymentProviderResult;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
+import com.stripe.model.Refund;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -47,6 +48,36 @@ public class StripePaymentProvider implements PaymentProvider {
             );
 
         } catch (StripeException e) {
+            return new PaymentProviderResult(
+                    false,
+                    null,
+                    null,
+                    e.getMessage()
+            );
+        }
+    }
+
+    @Override
+    public PaymentProviderResult refund(String paymentIntentId, Double amount) {
+
+        try {
+
+            Refund refund = Refund.create(
+                    Map.of(
+                            "payment_intent", paymentIntentId,
+                            "amount", (long) (amount * 100)
+                    )
+            );
+
+            return new PaymentProviderResult(
+                    true,
+                    refund.getId(),
+                    null,
+                    null
+            );
+
+        } catch (StripeException e) {
+
             return new PaymentProviderResult(
                     false,
                     null,

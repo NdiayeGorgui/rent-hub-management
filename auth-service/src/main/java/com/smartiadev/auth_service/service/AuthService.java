@@ -1,12 +1,17 @@
 package com.smartiadev.auth_service.service;
 
+import com.smartiadev.auth_service.dto.AuctionStrikeResponse;
+import com.smartiadev.auth_service.dto.UserBidEligibilityResponse;
 import com.smartiadev.auth_service.dto.UserResponse;
 import com.smartiadev.auth_service.dto.request.LoginRequest;
 import com.smartiadev.auth_service.dto.request.RegisterRequest;
 import com.smartiadev.auth_service.dto.response.AuthResponse;
 import com.smartiadev.auth_service.entity.User;
+import com.smartiadev.auth_service.kafka.AuctionEventPublisher;
 import com.smartiadev.auth_service.repository.UserRepository;
 import com.smartiadev.auth_service.security.JwtService;
+import com.smartiadev.base_domain_service.dto.AuctionStrikeEvent;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +29,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuctionEventPublisher auctionEventPublisher;
 
     public AuthResponse register(RegisterRequest request) {
 
@@ -88,7 +94,55 @@ public class AuthService {
         return new UserResponse(
                 user.getId(),
                 user.getFullName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getUsername()
         );
+    }
+
+
+    public UserBidEligibilityResponse checkBidEligibility(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean canBid =
+                user.isEnabled()
+                        && !user.isAuctionRestricted();
+
+        return new UserBidEligibilityResponse(
+                canBid,
+                user.isEnabled(),
+                user.isAuctionRestricted(),
+                user.getAuctionStrikes()
+        );
+    }
+
+    @Transactional
+    public AuctionStrikeResponse addAuctionStrike(UUID userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        int strikes = user.getAuctionStrikes() + 1;
+
+        user.setAuctionStrikes(strikes);
+
+        if (strikes >= 3) {
+            user.setAuctionRestricted(true);
+        }
+
+        userRepository.save(user);
+        auctionEventPublisher.publishAuctionStrike(
+                new AuctionStrikeEvent(
+                        user.getId(),
+                        user.getAuctionStrikes(),
+                        user.isAuctionRestricted()
+                )
+        );
+
+        return AuctionStrikeResponse.builder()
+                .auctionStrikes(strikes)
+                .auctionRestricted(user.isAuctionRestricted())
+                .build();
     }
 }

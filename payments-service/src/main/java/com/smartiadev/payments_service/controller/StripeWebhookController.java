@@ -69,12 +69,15 @@ public class StripeWebhookController {
                 if (payment.getStatus() != PaymentStatus.SUCCESS) {
                     payment.setStatus(PaymentStatus.SUCCESS);
                     repository.save(payment);
-
+                    log.info("Publishing PaymentCompletedEvent for user {}", payment.getUserId());
                     publisher.publishPaymentCompleted(
                             new PaymentCompletedEvent(
                                     payment.getId(),
+                                    payment.getPaymentIntentId(),
                                     payment.getUserId(),
+                                    payment.getItemId(),
                                     payment.getAmount(),
+                                    payment.getType(),
                                     LocalDateTime.now()
                             )
                     );

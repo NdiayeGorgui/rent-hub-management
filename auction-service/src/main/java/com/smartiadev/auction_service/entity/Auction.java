@@ -24,9 +24,19 @@ public class Auction {
     private Double startPrice;
     private Double currentPrice;
 
+    // 🔒 prix minimum secret
+    private Double reservePrice;
+
+    @Column(nullable = false)
+    private Integer views = 0;
+
+    @Column(nullable = false)
+    private Integer watchers = 0;
+
     private LocalDateTime startDate;
     private LocalDateTime endDate;
 
     @Enumerated(EnumType.STRING)
     private AuctionStatus status;
+
 }

@@ -1,6 +1,7 @@
 package com.smartiadev.payments_service.kafka;
 
 
+import com.smartiadev.base_domain_service.dto.AuctionFeeRefundedEvent;
 import com.smartiadev.base_domain_service.dto.PaymentCompletedEvent;
 import com.smartiadev.base_domain_service.dto.PaymentCreatedEvent;
 import com.smartiadev.base_domain_service.dto.PaymentFailedEvent;
@@ -33,6 +34,15 @@ public class PaymentEventPublisher {
                         reason,
                         LocalDateTime.now()
                 )
+        );
+    }
+
+    public void publishAuctionRefunded(AuctionFeeRefundedEvent event) {
+
+        kafkaTemplate.send(
+                "auction-fee-refunded",
+                event.auctionId().toString(),
+                event
         );
     }
 }

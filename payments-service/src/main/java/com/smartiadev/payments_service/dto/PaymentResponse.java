@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record PaymentResponse(
         Long id,
+        Long itemId,
         String userFullName,
         Double amount,
         String status,

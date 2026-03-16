@@ -5,8 +5,13 @@ import java.time.LocalDateTime;
 public record AuctionDto(
         Long id,
         Long itemId,
+        Double startPrice,
         Double currentPrice,
+        Integer participantsCount,
+        Integer views,
+        Integer watchers,
         LocalDateTime endDate,
-        String status
+        String status,
+        boolean reserveReached
 ) {}
 

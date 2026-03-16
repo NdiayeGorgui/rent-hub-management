@@ -5,6 +5,7 @@ import com.smartiadev.base_domain_service.dto.AuctionClosedEvent;
 import com.smartiadev.auction_service.entity.*;
 import com.smartiadev.auction_service.repository.AuctionRepository;
 import com.smartiadev.auction_service.repository.BidRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,7 @@ public class AuctionExpirationJob {
     private final AuctionEventPublisher eventPublisher;
 
     @Scheduled(fixedRate = 60000)
+    @Transactional
     public void closeExpiredAuctions() {
 
         var expiredAuctions =
@@ -30,40 +32,56 @@ public class AuctionExpirationJob {
 
         for (var auction : expiredAuctions) {
 
-            auction.setStatus(AuctionStatus.CLOSED);
-
-            bidRepository
-                    .findTopByAuctionIdOrderByAmountDesc(auction.getId())
+            bidRepository.findTopByAuctionIdOrderByAmountDesc(auction.getId())
                     .ifPresentOrElse(
+                            bid -> {
+                                // 🔒 Vérifier si le prix de réserve est atteint
+                                boolean reserveMet = auction.getReservePrice() == null
+                                        || bid.getAmount() >= auction.getReservePrice();
 
-                            // 🏆 CAS AVEC GAGNANT
-                            bid -> eventPublisher.publishAuctionClosed(
-                                    new AuctionClosedEvent(
-                                            auction.getId(),
-                                            auction.getItemId(),
-                                            auction.getOwnerId(),
-                                            bid.getBidderId(),
-                                            bid.getAmount()
-                                    )
-                            ),
-
-                            // ❌ CAS SANS ENCHÈRE
-                            () -> eventPublisher.publishAuctionClosed(
-                                    new AuctionClosedEvent(
-                                            auction.getId(),
-                                            auction.getItemId(),
-                                            auction.getOwnerId(),
-                                            null,
-                                            null
-                                    )
-                            )
+                                if (reserveMet) {
+                                    auction.setStatus(AuctionStatus.CLOSED); // Gagnant
+                                    eventPublisher.publishAuctionClosed(
+                                            new AuctionClosedEvent(
+                                                    auction.getId(),
+                                                    auction.getItemId(),
+                                                    auction.getOwnerId(),
+                                                    bid.getBidderId(),
+                                                    bid.getAmount(),
+                                                    true // reserveMet
+                                            )
+                                    );
+                                } else {
+                                    auction.setStatus(AuctionStatus.RESERVE_NOT_MET);
+                                    eventPublisher.publishAuctionClosed(
+                                            new AuctionClosedEvent(
+                                                    auction.getId(),
+                                                    auction.getItemId(),
+                                                    auction.getOwnerId(),
+                                                    null,
+                                                    bid.getAmount(),
+                                                    false // reserveMet
+                                            )
+                                    );
+                                }
+                            },
+                            () -> {
+                                // ❌ Aucune enchère
+                                auction.setStatus(AuctionStatus.CLOSED);
+                                eventPublisher.publishAuctionClosed(
+                                        new AuctionClosedEvent(
+                                                auction.getId(),
+                                                auction.getItemId(),
+                                                auction.getOwnerId(),
+                                                null,
+                                                null,
+                                                false // reserveMet
+                                        )
+                                );
+                            }
                     );
         }
 
         auctionRepository.saveAll(expiredAuctions);
     }
 }
-
-
-
-

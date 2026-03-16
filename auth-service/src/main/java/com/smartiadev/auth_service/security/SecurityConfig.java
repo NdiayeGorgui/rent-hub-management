@@ -39,7 +39,8 @@ public class SecurityConfig {
                         // 🔓 Autoriser les appels internes
                         .requestMatchers("/api/users/internal/**").permitAll()
                         .requestMatchers(
-                                "/api/reviews/**"
+                                "/api/reviews/**",
+                                "/api/messages/**"
                         ).permitAll()
                         // 🔓 Autoriser OPTIONS pour CORS
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")

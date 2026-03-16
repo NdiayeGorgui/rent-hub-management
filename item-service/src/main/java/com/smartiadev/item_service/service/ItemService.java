@@ -48,4 +48,5 @@ public interface ItemService {
             List<MultipartFile> images,
             UUID ownerId
     );
+    List<AdminItemDto> findAllAdminItems();
 }

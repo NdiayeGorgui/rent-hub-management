@@ -1,5 +1,6 @@
 package com.smartiadev.payments_service.repository;
 
+import com.smartiadev.base_domain_service.model.PaymentType;
 import com.smartiadev.payments_service.entity.Payment;
 import com.smartiadev.payments_service.entity.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -46,5 +47,8 @@ public interface PaymentRepository
     );
 
     Optional<Payment> findByPaymentIntentId(String paymentIntentId);
+
+    Optional<Payment> findByAuctionIdAndType(Long auctionId, PaymentType type);
+    Optional<Payment> findByItemIdAndType(Long itemId, PaymentType type);
 }
 

@@ -103,4 +103,24 @@ public class PaymentController {
     public List<PaymentResponse> getPendingPayments() {
         return service.getPendingPayments();
     }
+
+    @PostMapping("/auction-fee/{itemId}")
+    public PaymentResponse payAuctionFee(
+            @PathVariable Long itemId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+
+        UUID userId = UUID.fromString(jwt.getSubject());
+
+        return service.createAuctionFeePayment(userId,itemId);
+    }
+
+    @PostMapping("/admin/refund-auction-fee")
+    public void refundAuctionFee(
+            @RequestParam Long auctionId,
+            @RequestParam UUID ownerId
+    ) {
+        service.refundAuctionFee(auctionId, ownerId);
+    }
+
 }

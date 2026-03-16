@@ -37,6 +37,8 @@ public class User {
     private String profilePicture;
 
     private boolean enabled = true;
+    private int auctionStrikes = 0;
+    private boolean auctionRestricted = false;
 
     private LocalDateTime createdAt;
     @ElementCollection(fetch = FetchType.EAGER)

@@ -17,6 +17,8 @@ public class PaymentFailedConsumer {
             groupId = "subscription-group"
     )
     public void onPaymentFailed(PaymentFailedEvent event) {
+
         service.handlePaymentFailure(event.userId());
+
     }
 }

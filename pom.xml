@@ -26,6 +26,7 @@
         <module>dispute-service</module>
         <module>eureka-registry</module>
         <module>item-service</module>
+        <module>messaging-service</module>
         <module>notif-service</module>
         <module>payments-service</module>
         <module>rental-service</module>

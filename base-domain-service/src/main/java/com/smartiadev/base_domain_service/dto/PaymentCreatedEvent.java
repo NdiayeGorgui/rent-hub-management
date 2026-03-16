@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record PaymentCreatedEvent(
         Long paymentId,
+        String paymentIntentId,
         UUID userId,
         String fullName,
         Double amount,

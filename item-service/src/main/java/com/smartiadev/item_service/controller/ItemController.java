@@ -131,6 +131,11 @@ public class ItemController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/{id}/activate")
+    public void activate(@PathVariable Long id) {
+        service.adminActivate(id);
+    }
+
     @Operation(summary = "Get internal item data", description = "Internal endpoint for other microservices to fetch item data.")
     @GetMapping("/internal/{id}")
     public ItemInternalDTO getInternalItem(@PathVariable Long id) throws ItemNotFoundException {

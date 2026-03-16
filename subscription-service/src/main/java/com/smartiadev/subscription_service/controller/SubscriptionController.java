@@ -55,7 +55,7 @@ public class SubscriptionController {
     /* ============================
        SUBSCRIBE TO PREMIUM
        ============================ */
-    @Operation(
+  /*  @Operation(
             summary = "Subscribe to premium",
             description = "Activate premium subscription for the authenticated user."
     )
@@ -71,7 +71,7 @@ public class SubscriptionController {
     ) {
         UUID userId = UUID.fromString(jwt.getSubject());
         service.subscribe(userId);
-    }
+    }*/
 
     /* ============================
        CANCEL SUBSCRIPTION
@@ -119,7 +119,7 @@ public class SubscriptionController {
     ) {
         return service.getPremiumStatus(userId);
     }
-    @Operation(
+  /*  @Operation(
             summary = "Activate premium subscription (internal)",
             description = "Internal endpoint used by payment-service to activate a premium subscription for a specific user after successful payment."
     )
@@ -139,6 +139,6 @@ public class SubscriptionController {
             @PathVariable UUID userId
     ) {
         service.subscribe(userId);
-    }
+    }*/
 
 }

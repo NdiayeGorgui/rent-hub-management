@@ -7,7 +7,8 @@ public record AuctionClosedEvent(
         Long auctionId,
         Long itemId,
         UUID ownerId,
-        UUID winnerId,
-        Double winningAmount
+        UUID winnerId,       // null si pas de gagnant
+        Double winningAmount, // null si pas de gagnant
+        boolean reserveMet
 ) {}
 

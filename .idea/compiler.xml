@@ -24,14 +24,15 @@
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
         </processorPath>
-        <module name="auth-service" />
+        <module name="messaging-service" />
         <module name="subscription-service" />
         <module name="configuration-service" />
         <module name="review-service" />
-        <module name="api-gateway" />
         <module name="item-service" />
         <module name="notif-service" />
         <module name="dispute-service" />
+        <module name="auth-service" />
+        <module name="api-gateway" />
         <module name="eureka-registry" />
         <module name="rental-service" />
         <module name="auction-service" />
@@ -49,6 +50,7 @@
       <module name="dispute-service" options="-parameters" />
       <module name="eureka-registry" options="-parameters" />
       <module name="item-service" options="-parameters" />
+      <module name="messaging-service" options="-parameters" />
       <module name="notif-service" options="-parameters" />
       <module name="payments-service" options="-parameters" />
       <module name="rental-service" options="-parameters" />

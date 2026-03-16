@@ -29,6 +29,7 @@ public class SecurityConfig {
                         // 🔓 Autoriser OPTIONS pour CORS
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/notifications/**","/api/auctions/*/watchers").permitAll()
                         // 🔓 API public (si tu as des endpoints publics, sinon retire)
                         //.requestMatchers("/api/disputes/public/**").permitAll()
 

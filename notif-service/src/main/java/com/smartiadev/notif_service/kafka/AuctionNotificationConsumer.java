@@ -1,6 +1,8 @@
 package com.smartiadev.notif_service.kafka;
 
+import com.smartiadev.base_domain_service.dto.AuctionBidPlacedEvent;
 import com.smartiadev.base_domain_service.dto.AuctionClosedEvent;
+import com.smartiadev.notif_service.client.WatcherClient;
 import com.smartiadev.notif_service.entity.Notification;
 import com.smartiadev.notif_service.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +11,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
-
+import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -17,7 +20,47 @@ public class AuctionNotificationConsumer {
 
     private final NotificationRepository repository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final WatcherClient watcherClient;
 
+    /* =========================================
+       NEW BID NOTIFICATION
+       ========================================= */
+    @KafkaListener(
+            topics = "auction.bid.placed",
+            groupId = "notification-group"
+    )
+    public void onNewBid(AuctionBidPlacedEvent event) {
+
+        List<UUID> watchers = watcherClient.getWatchers(event.auctionId());
+
+        for (UUID watcherId : watchers) {
+
+            // ne pas notifier celui qui a fait l'enchère
+            if (watcherId.equals(event.bidderId())) {
+                continue;
+            }
+
+            Notification notification = repository.save(
+                    new Notification(
+                            null,
+                            watcherId,
+                            "🔥 Nouvelle enchère : " + event.amount() + " $",
+                            "NEW_BID",
+                            false,
+                            LocalDateTime.now()
+                    )
+            );
+
+            messagingTemplate.convertAndSend(
+                    "/topic/notifications/" + watcherId,
+                    notification
+            );
+        }
+    }
+
+    /* =========================================
+       AUCTION CLOSED NOTIFICATION
+       ========================================= */
     @KafkaListener(
             topics = "auction.closed",
             groupId = "notification-group"
@@ -26,6 +69,7 @@ public class AuctionNotificationConsumer {
 
         Notification notification;
 
+        // 🏆 CAS GAGNANT
         if (event.winnerId() != null) {
 
             notification = repository.save(
@@ -40,15 +84,34 @@ public class AuctionNotificationConsumer {
                     )
             );
 
-            // 📡 envoyer au frontend
             messagingTemplate.convertAndSend(
                     "/topic/notifications/" + event.winnerId(),
                     notification
             );
 
-            System.out.println("🏆 Notification envoyée + websocket");
+        }
+        // ❌ CAS RESERVE NON ATTEINT
+        else if (!event.reserveMet()) {
 
-        } else {
+            notification = repository.save(
+                    new Notification(
+                            null,
+                            event.ownerId(),
+                            "📭 L’enchère est terminée : le prix de réserve n’a pas été atteint.",
+                            "AUCTION_RESERVE_NOT_MET",
+                            false,
+                            LocalDateTime.now()
+                    )
+            );
+
+            messagingTemplate.convertAndSend(
+                    "/topic/notifications/" + event.ownerId(),
+                    notification
+            );
+
+        }
+        // ❌ CAS AUCUNE ENCHÈRE
+        else {
 
             notification = repository.save(
                     new Notification(

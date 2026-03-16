@@ -1,6 +1,7 @@
 package com.smartiadev.auction_service.controller;
 
 import com.smartiadev.auction_service.dto.*;
+import com.smartiadev.auction_service.entity.Auction;
 import com.smartiadev.auction_service.service.AuctionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -94,5 +96,50 @@ public class AuctionController {
     @GetMapping("/by-item/{itemId}")
     public AuctionDto getActiveByItemId(@PathVariable Long itemId) {
         return service.getActiveAuctionByItemId(itemId);
+    }
+
+    // Watch l'enchère
+    @PostMapping("/{id}/watch")
+    public AuctionDto watch(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return service.watchAuction(id, userId);  // ✅ méthode avec userId
+    }
+
+    // Vérifier si déjà suivi
+    @GetMapping("/{id}/is-watching")
+    public boolean isWatching(
+            @PathVariable Long id,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        return service.isWatching(id, userId);
+    }
+
+    @GetMapping("/public/by-item/{itemId}")
+    public AuctionDto getAuctionPublic(@PathVariable Long itemId) {
+        return service.getAuctionPublic(itemId);
+    }
+
+    @GetMapping("/{id}/watchers")
+    public List<UUID> getWatchers(@PathVariable Long id){
+        return service.getWatcherIds(id);
+    }
+
+    @PostMapping("/{id}/close")
+    public void close(@PathVariable Long id){
+        service.closeAuction(id);
+    }
+
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancelAuction(
+            @PathVariable Long id
+    ) {
+
+        service.cancelAuction(id);
+
+        return ResponseEntity.ok().build();
     }
 }

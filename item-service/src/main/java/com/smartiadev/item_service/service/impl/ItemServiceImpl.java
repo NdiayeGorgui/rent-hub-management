@@ -1,9 +1,6 @@
 package com.smartiadev.item_service.service.impl;
 
-import com.smartiadev.item_service.client.AuthClient;
-import com.smartiadev.item_service.client.RentalClient;
-import com.smartiadev.item_service.client.ReviewClient;
-import com.smartiadev.item_service.client.SubscriptionClient;
+import com.smartiadev.item_service.client.*;
 import com.smartiadev.item_service.dto.*;
 import com.smartiadev.item_service.entity.Item;
 import com.smartiadev.item_service.entity.ItemType;
@@ -33,6 +30,7 @@ public class ItemServiceImpl implements ItemService {
     private final RentalClient rentalClient;
     private final AuthClient authClient;
     private final SubscriptionClient subscriptionClient;
+    private final AuctionClient  auctionClient;
     private final ImageStorageService imageStorageService;
     private static final String ITEM_SERVICE_BASE_URL = "http://localhost:8080"; // gateway
     /* =====================
@@ -58,20 +56,27 @@ public class ItemServiceImpl implements ItemService {
        CONSTRUCTION ENTITY
        ========================= */
 
+        boolean active = true;
+
+        // 🔥 si auction → attendre paiement
+        if (dto.getType() == ItemType.AUCTION) {
+            active = false;
+        }
+
         Item item = Item.builder()
                 .ownerId(ownerId)
                 .title(dto.getTitle())
                 .description(dto.getDescription())
                 .categoryId(dto.getCategoryId())
-                .type(dto.getType()) // 🔥 IMPORTANT (tu l’avais oublié)
+                .type(dto.getType())
                 .pricePerDay(dto.getPricePerDay())
                 .city(dto.getCity())
                 .address(dto.getAddress())
-               // .imageUrls(dto.getImageUrls())
-                .active(true)
+                .active(active)
                 .build();
 
         Item saved = repository.save(item);
+
         return map(saved);
     }
 
@@ -419,5 +424,76 @@ public class ItemServiceImpl implements ItemService {
         if (dto.getType() == ItemType.AUCTION && dto.getPricePerDay() != null) {
             throw new IllegalArgumentException("pricePerDay must be null for auction items");
         }
+    }
+
+    @Override
+    public List<AdminItemDto> findAllAdminItems() {
+
+        List<Item> items = repository.findAll();
+
+        return items.stream().map(item -> {
+
+            // AUTH SERVICE
+            UserProfileInternalDto user =
+                    authClient.getUserProfile(item.getOwnerId());
+
+            // SUBSCRIPTION SERVICE
+            PremiumStatusResponse premium =
+                    subscriptionClient.getPremiumStatus(item.getOwnerId());
+
+            Double currentPrice = null;
+
+            // AUCTION SERVICE
+            if (item.getType() == ItemType.AUCTION) {
+
+                try {
+
+                    AuctionDto auction =
+                            auctionClient.getAuctionByItemId(item.getId());
+
+                    if (auction != null) {
+                        currentPrice = auction.currentPrice();
+                    }
+
+                } catch (Exception ignored) {}
+
+            }
+
+            return AdminItemDto.builder()
+
+                    .itemId(item.getId())
+                    .title(item.getTitle())
+                    .description(item.getDescription())
+
+                    .city(item.getCity())
+                    .address(item.getAddress())
+
+                    .pricePerDay(item.getPricePerDay())
+                    .active(item.getActive())
+
+                    .type(item.getType().name())
+
+                    .imageUrls(item.getImageUrls())
+
+                    // publisher
+                    .userId(user.getUserId())
+                    .username(user.getUsername())
+                    .fullName(user.getFullName())
+                    .publisherCity(user.getCity())
+
+                    .averageRating(user.getAverageRating())
+                    .reviewsCount(user.getReviewsCount())
+                    .badge(user.getBadge())
+
+                    // subscription
+                    .premium(premium.premium())
+                    .gracePeriod(premium.gracePeriod())
+
+                    // auction
+                    .currentPrice(currentPrice)
+
+                    .build();
+
+        }).toList();
     }
 }
